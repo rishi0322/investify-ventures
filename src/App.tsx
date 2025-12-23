@@ -8,6 +8,11 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Startups from "./pages/Startups";
 import StartupDetail from "./pages/StartupDetail";
+import Sectors from "./pages/Sectors";
+import HowItWorks from "./pages/HowItWorks";
+import InvestorDashboard from "./pages/InvestorDashboard";
+import StartupDashboard from "./pages/StartupDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +29,11 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/startups" element={<Startups />} />
             <Route path="/startups/:id" element={<StartupDetail />} />
+            <Route path="/sectors" element={<Sectors />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/investor/dashboard" element={<InvestorDashboard />} />
+            <Route path="/startup/dashboard" element={<StartupDashboard />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
