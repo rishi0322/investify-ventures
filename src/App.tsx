@@ -13,6 +13,11 @@ import HowItWorks from "./pages/HowItWorks";
 import InvestorDashboard from "./pages/InvestorDashboard";
 import StartupDashboard from "./pages/StartupDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import Wallet from "./pages/Wallet";
+import AIMatching from "./pages/AIMatching";
+import Messages from "./pages/Messages";
+import Analytics from "./pages/Analytics";
+import Watchlist from "./pages/Watchlist";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,12 +33,17 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/startups" element={<Startups />} />
-            <Route path="/startups/:id" element={<StartupDetail />} />
+            <Route path="/startup/:id" element={<StartupDetail />} />
             <Route path="/sectors" element={<Sectors />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/investor/dashboard" element={<InvestorDashboard />} />
             <Route path="/startup/dashboard" element={<StartupDashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/wallet" element={<Wallet />} />
+            <Route path="/ai-matching" element={<AIMatching />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/watchlist" element={<Watchlist />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
