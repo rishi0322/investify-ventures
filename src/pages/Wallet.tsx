@@ -7,7 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,7 +28,12 @@ import {
   Loader2,
   Lock,
   Shield,
-  Settings
+  Settings,
+  IndianRupee,
+  DollarSign,
+  Coins,
+  TrendingUp,
+  ArrowRightLeft
 } from 'lucide-react';
 
 interface Transaction {
@@ -50,6 +57,22 @@ interface UserWallet {
   tpin_set: boolean;
 }
 
+// Currency configurations
+const CURRENCIES = {
+  ETH: { symbol: 'ETH', name: 'Ethereum', icon: Bitcoin, color: 'text-purple-500', rate: 250000 },
+  BTC: { symbol: 'BTC', name: 'Bitcoin', icon: Bitcoin, color: 'text-orange-500', rate: 7500000 },
+  INR: { symbol: '₹', name: 'Indian Rupee', icon: IndianRupee, color: 'text-green-500', rate: 1 },
+  USDT: { symbol: 'USDT', name: 'Tether', icon: DollarSign, color: 'text-emerald-500', rate: 83 },
+  SOL: { symbol: 'SOL', name: 'Solana', icon: Coins, color: 'text-gradient-purple', rate: 15000 },
+} as const;
+
+type CurrencyType = keyof typeof CURRENCIES;
+
+interface CurrencyBalance {
+  currency: CurrencyType;
+  balance: number;
+}
+
 export default function Wallet() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -64,6 +87,20 @@ export default function Wallet() {
   const [processing, setProcessing] = useState(false);
   const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
+  
+  // Multi-currency state
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyType>('ETH');
+  const [currencyBalances, setCurrencyBalances] = useState<CurrencyBalance[]>([
+    { currency: 'ETH', balance: 0 },
+    { currency: 'BTC', balance: 0 },
+    { currency: 'INR', balance: 0 },
+    { currency: 'USDT', balance: 0 },
+    { currency: 'SOL', balance: 0 },
+  ]);
+  const [convertOpen, setConvertOpen] = useState(false);
+  const [convertFrom, setConvertFrom] = useState<CurrencyType>('ETH');
+  const [convertTo, setConvertTo] = useState<CurrencyType>('INR');
+  const [convertAmount, setConvertAmount] = useState('');
   
   // PIN related states
   const [pinSetupOpen, setPinSetupOpen] = useState(false);
@@ -104,6 +141,16 @@ export default function Wallet() {
 
     setWallet(walletData as UserWallet);
     
+    // Simulate multi-currency balances based on main ETH balance
+    const ethBalance = walletData?.balance || 0;
+    setCurrencyBalances([
+      { currency: 'ETH', balance: ethBalance },
+      { currency: 'BTC', balance: ethBalance * 0.03 }, // Simulated ratio
+      { currency: 'INR', balance: ethBalance * 250000 },
+      { currency: 'USDT', balance: ethBalance * 3000 },
+      { currency: 'SOL', balance: ethBalance * 15 },
+    ]);
+    
     // If PIN is set, wallet should be locked initially
     if (walletData?.pin_set) {
       setWalletLocked(true);
@@ -119,6 +166,52 @@ export default function Wallet() {
 
     setTransactions((txData || []) as Transaction[]);
     setLoading(false);
+  };
+
+  // Currency conversion
+  const handleConvert = async () => {
+    const amount = parseFloat(convertAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast({ variant: 'destructive', title: 'Invalid amount' });
+      return;
+    }
+
+    const fromBalance = currencyBalances.find(b => b.currency === convertFrom)?.balance || 0;
+    if (amount > fromBalance) {
+      toast({ variant: 'destructive', title: 'Insufficient balance' });
+      return;
+    }
+
+    setProcessing(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Calculate conversion
+    const fromRate = CURRENCIES[convertFrom].rate;
+    const toRate = CURRENCIES[convertTo].rate;
+    const inrValue = amount * fromRate;
+    const convertedAmount = inrValue / toRate;
+
+    // Update balances
+    setCurrencyBalances(prev => prev.map(b => {
+      if (b.currency === convertFrom) return { ...b, balance: b.balance - amount };
+      if (b.currency === convertTo) return { ...b, balance: b.balance + convertedAmount };
+      return b;
+    }));
+
+    toast({
+      title: 'Conversion successful!',
+      description: `Converted ${amount} ${convertFrom} to ${convertedAmount.toFixed(4)} ${convertTo}`
+    });
+
+    setConvertOpen(false);
+    setConvertAmount('');
+    setProcessing(false);
+  };
+
+  const getTotalInINR = () => {
+    return currencyBalances.reduce((total, b) => {
+      return total + (b.balance * CURRENCIES[b.currency].rate);
+    }, 0);
   };
 
   const unlockWallet = () => {
@@ -357,20 +450,46 @@ export default function Wallet() {
           </Card>
         )}
 
-        {/* Wallet Overview */}
+        {/* Multi-Currency Portfolio */}
+        <div className="grid md:grid-cols-4 gap-4 mb-8">
+          {currencyBalances.map((bal) => {
+            const currency = CURRENCIES[bal.currency];
+            const CurrencyIcon = currency.icon;
+            return (
+              <Card key={bal.currency} className={`hover:shadow-lg transition-shadow ${selectedCurrency === bal.currency ? 'ring-2 ring-primary' : ''}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <CurrencyIcon className={`h-5 w-5 ${currency.color}`} />
+                      <span className="font-medium">{currency.name}</span>
+                    </div>
+                    <Badge variant="secondary" className="text-xs">{currency.symbol}</Badge>
+                  </div>
+                  <p className="text-2xl font-bold">{bal.balance.toFixed(bal.currency === 'INR' ? 2 : 4)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    ≈ ₹{(bal.balance * currency.rate).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                  </p>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Main Wallet Card */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <Card className="md:col-span-2 gradient-card border-primary/20">
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-6">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Total Balance</p>
+                  <p className="text-sm text-muted-foreground mb-1">Total Portfolio Value</p>
                   <p className="text-4xl font-display font-bold flex items-center gap-2">
-                    <Bitcoin className="h-8 w-8 text-primary" />
-                    {wallet?.balance?.toFixed(4) || '0.0000'} ETH
+                    <IndianRupee className="h-8 w-8 text-primary" />
+                    {getTotalInINR().toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                   </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    ≈ ₹{((wallet?.balance || 0) * 250000).toLocaleString('en-IN')}
-                  </p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <TrendingUp className="h-4 w-4 text-success" />
+                    <span className="text-sm text-success">+12.5% this month</span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {wallet?.pin_set && (
@@ -403,14 +522,32 @@ export default function Wallet() {
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Deposit ETH</DialogTitle>
+                      <DialogTitle>Deposit Funds</DialogTitle>
                       <DialogDescription>
                         Add funds to your wallet (Demo - simulated transaction)
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
-                        <Label>Amount (ETH)</Label>
+                        <Label>Currency</Label>
+                        <Select value={selectedCurrency} onValueChange={(v) => setSelectedCurrency(v as CurrencyType)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.entries(CURRENCIES).map(([key, curr]) => (
+                              <SelectItem key={key} value={key}>
+                                <div className="flex items-center gap-2">
+                                  <curr.icon className={`h-4 w-4 ${curr.color}`} />
+                                  {curr.name} ({curr.symbol})
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Amount ({CURRENCIES[selectedCurrency].symbol})</Label>
                         <Input
                           type="number"
                           placeholder="0.1"
@@ -439,7 +576,7 @@ export default function Wallet() {
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Withdraw ETH</DialogTitle>
+                      <DialogTitle>Withdraw Funds</DialogTitle>
                       <DialogDescription>
                         Send funds to an external wallet (Demo - simulated transaction)
                         {wallet?.tpin_set && <span className="block mt-1 text-warning">TPIN verification required</span>}
@@ -455,7 +592,7 @@ export default function Wallet() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Amount (ETH)</Label>
+                        <Label>Amount ({CURRENCIES[selectedCurrency].symbol})</Label>
                         <Input
                           type="number"
                           placeholder="0.1"
@@ -464,7 +601,7 @@ export default function Wallet() {
                           step="0.01"
                         />
                         <p className="text-xs text-muted-foreground">
-                          Available: {wallet?.balance?.toFixed(4) || '0'} ETH
+                          Available: {currencyBalances.find(b => b.currency === selectedCurrency)?.balance.toFixed(4) || '0'} {CURRENCIES[selectedCurrency].symbol}
                         </p>
                       </div>
                     </div>
@@ -473,6 +610,80 @@ export default function Wallet() {
                       <Button onClick={initiateWithdraw} disabled={processing}>
                         {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                         {wallet?.tpin_set ? 'Verify & Withdraw' : 'Confirm Withdrawal'}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+
+                <Dialog open={convertOpen} onOpenChange={setConvertOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="secondary" className="flex-1">
+                      <ArrowRightLeft className="h-4 w-4 mr-2" />
+                      Convert
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Convert Currency</DialogTitle>
+                      <DialogDescription>
+                        Swap between currencies instantly (Demo rates)
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>From</Label>
+                          <Select value={convertFrom} onValueChange={(v) => setConvertFrom(v as CurrencyType)}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Object.entries(CURRENCIES).map(([key, curr]) => (
+                                <SelectItem key={key} value={key}>{curr.symbol}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>To</Label>
+                          <Select value={convertTo} onValueChange={(v) => setConvertTo(v as CurrencyType)}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Object.entries(CURRENCIES).filter(([k]) => k !== convertFrom).map(([key, curr]) => (
+                                <SelectItem key={key} value={key}>{curr.symbol}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Amount ({CURRENCIES[convertFrom].symbol})</Label>
+                        <Input
+                          type="number"
+                          placeholder="0.1"
+                          value={convertAmount}
+                          onChange={(e) => setConvertAmount(e.target.value)}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Available: {currencyBalances.find(b => b.currency === convertFrom)?.balance.toFixed(4)} {CURRENCIES[convertFrom].symbol}
+                        </p>
+                      </div>
+                      {convertAmount && parseFloat(convertAmount) > 0 && (
+                        <div className="p-3 bg-muted/50 rounded-lg">
+                          <p className="text-sm text-muted-foreground">You will receive approximately:</p>
+                          <p className="text-lg font-bold">
+                            {((parseFloat(convertAmount) * CURRENCIES[convertFrom].rate) / CURRENCIES[convertTo].rate).toFixed(4)} {CURRENCIES[convertTo].symbol}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setConvertOpen(false)}>Cancel</Button>
+                      <Button onClick={handleConvert} disabled={processing}>
+                        {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                        Convert
                       </Button>
                     </DialogFooter>
                   </DialogContent>

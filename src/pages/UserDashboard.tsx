@@ -496,7 +496,7 @@ export default function UserDashboard() {
           <TabsContent value="ai">
             <div className="grid lg:grid-cols-2 gap-6">
               {user && (
-                <AIRecommendationsPanel userId={user.id} investments={displayInvestments} />
+                <AIRecommendationsPanel userId={user.id} investments={displayInvestments} demoMode={demoMode} />
               )}
               <Card>
                 <CardHeader>
