@@ -33,12 +33,8 @@ import {
   DollarSign,
   Coins,
   TrendingUp,
-  ArrowRightLeft,
-  CreditCard,
-  Building2,
-  Smartphone
+  ArrowRightLeft
 } from 'lucide-react';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface Transaction {
   id: string;
@@ -105,17 +101,6 @@ export default function Wallet() {
   const [convertFrom, setConvertFrom] = useState<CurrencyType>('ETH');
   const [convertTo, setConvertTo] = useState<CurrencyType>('INR');
   const [convertAmount, setConvertAmount] = useState('');
-  
-  // Withdrawal method state
-  const [withdrawMethod, setWithdrawMethod] = useState<'crypto' | 'upi' | 'bank'>('crypto');
-  const [upiId, setUpiId] = useState('');
-  const [bankDetails, setBankDetails] = useState({
-    accountNumber: '',
-    confirmAccountNumber: '',
-    ifscCode: '',
-    branchName: '',
-    accountHolderName: ''
-  });
   
   // PIN related states
   const [pinSetupOpen, setPinSetupOpen] = useState(false);
@@ -589,124 +574,23 @@ export default function Wallet() {
                       Withdraw
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-md">
+                  <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Withdraw Funds</DialogTitle>
                       <DialogDescription>
-                        Choose your withdrawal method (Demo - simulated transaction)
+                        Send funds to an external wallet (Demo - simulated transaction)
                         {wallet?.tpin_set && <span className="block mt-1 text-warning">TPIN verification required</span>}
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
-                      {/* Withdrawal Method Selection */}
                       <div className="space-y-2">
-                        <Label>Withdrawal Method</Label>
-                        <RadioGroup value={withdrawMethod} onValueChange={(v) => setWithdrawMethod(v as 'crypto' | 'upi' | 'bank')}>
-                          <div className="grid grid-cols-3 gap-3">
-                            <div className={`flex flex-col items-center p-3 border rounded-lg cursor-pointer transition-all ${withdrawMethod === 'crypto' ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'}`}>
-                              <RadioGroupItem value="crypto" id="crypto" className="sr-only" />
-                              <label htmlFor="crypto" className="cursor-pointer text-center">
-                                <Bitcoin className="h-6 w-6 mx-auto mb-1 text-orange-500" />
-                                <span className="text-xs font-medium">Crypto</span>
-                              </label>
-                            </div>
-                            <div className={`flex flex-col items-center p-3 border rounded-lg cursor-pointer transition-all ${withdrawMethod === 'upi' ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'}`}>
-                              <RadioGroupItem value="upi" id="upi" className="sr-only" />
-                              <label htmlFor="upi" className="cursor-pointer text-center">
-                                <Smartphone className="h-6 w-6 mx-auto mb-1 text-purple-500" />
-                                <span className="text-xs font-medium">UPI</span>
-                              </label>
-                            </div>
-                            <div className={`flex flex-col items-center p-3 border rounded-lg cursor-pointer transition-all ${withdrawMethod === 'bank' ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'}`}>
-                              <RadioGroupItem value="bank" id="bank" className="sr-only" />
-                              <label htmlFor="bank" className="cursor-pointer text-center">
-                                <Building2 className="h-6 w-6 mx-auto mb-1 text-blue-500" />
-                                <span className="text-xs font-medium">Bank</span>
-                              </label>
-                            </div>
-                          </div>
-                        </RadioGroup>
+                        <Label>Recipient Address</Label>
+                        <Input
+                          placeholder="0x..."
+                          value={withdrawAddress}
+                          onChange={(e) => setWithdrawAddress(e.target.value)}
+                        />
                       </div>
-
-                      {/* Crypto Withdrawal */}
-                      {withdrawMethod === 'crypto' && (
-                        <div className="space-y-2">
-                          <Label>Wallet Address</Label>
-                          <Input
-                            placeholder="0x..."
-                            value={withdrawAddress}
-                            onChange={(e) => setWithdrawAddress(e.target.value)}
-                          />
-                        </div>
-                      )}
-
-                      {/* UPI Withdrawal */}
-                      {withdrawMethod === 'upi' && (
-                        <div className="space-y-2">
-                          <Label>UPI ID</Label>
-                          <Input
-                            placeholder="yourname@upi"
-                            value={upiId}
-                            onChange={(e) => setUpiId(e.target.value)}
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            Example: 9876543210@paytm, yourname@okaxis
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Bank Account Withdrawal */}
-                      {withdrawMethod === 'bank' && (
-                        <div className="space-y-3">
-                          <div className="space-y-2">
-                            <Label>Account Holder Name</Label>
-                            <Input
-                              placeholder="As per bank records"
-                              value={bankDetails.accountHolderName}
-                              onChange={(e) => setBankDetails({...bankDetails, accountHolderName: e.target.value})}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Account Number</Label>
-                            <Input
-                              placeholder="Enter account number"
-                              value={bankDetails.accountNumber}
-                              onChange={(e) => setBankDetails({...bankDetails, accountNumber: e.target.value})}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Confirm Account Number</Label>
-                            <Input
-                              placeholder="Re-enter account number"
-                              value={bankDetails.confirmAccountNumber}
-                              onChange={(e) => setBankDetails({...bankDetails, confirmAccountNumber: e.target.value})}
-                            />
-                            {bankDetails.accountNumber && bankDetails.confirmAccountNumber && 
-                              bankDetails.accountNumber !== bankDetails.confirmAccountNumber && (
-                              <p className="text-xs text-destructive">Account numbers don't match</p>
-                            )}
-                          </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-2">
-                              <Label>IFSC Code</Label>
-                              <Input
-                                placeholder="ABCD0001234"
-                                value={bankDetails.ifscCode}
-                                onChange={(e) => setBankDetails({...bankDetails, ifscCode: e.target.value.toUpperCase()})}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Branch Name</Label>
-                              <Input
-                                placeholder="City Branch"
-                                value={bankDetails.branchName}
-                                onChange={(e) => setBankDetails({...bankDetails, branchName: e.target.value})}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
                       <div className="space-y-2">
                         <Label>Amount ({CURRENCIES[selectedCurrency].symbol})</Label>
                         <Input
@@ -719,11 +603,6 @@ export default function Wallet() {
                         <p className="text-xs text-muted-foreground">
                           Available: {currencyBalances.find(b => b.currency === selectedCurrency)?.balance.toFixed(4) || '0'} {CURRENCIES[selectedCurrency].symbol}
                         </p>
-                        {withdrawMethod !== 'crypto' && (
-                          <p className="text-xs text-muted-foreground">
-                            ≈ ₹{(parseFloat(withdrawAmount || '0') * CURRENCIES[selectedCurrency].rate).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                          </p>
-                        )}
                       </div>
                     </div>
                     <DialogFooter>

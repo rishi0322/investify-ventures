@@ -17,7 +17,6 @@ import { StockTwits } from '@/components/dashboard/StockTwits';
 import { InvestmentSummary } from '@/components/dashboard/InvestmentSummary';
 import { WalletWidget } from '@/components/dashboard/WalletWidget';
 import { AIRecommendationsPanel } from '@/components/portfolio/AIRecommendationsPanel';
-import { InvestmentJourneyChart } from '@/components/portfolio/InvestmentJourneyChart';
 import { sampleInvestments, sampleWatchlist } from '@/data/sampleInvestments';
 import { 
   TrendingUp, 
@@ -465,8 +464,7 @@ export default function UserDashboard() {
           </TabsContent>
 
           {/* Portfolio Tab */}
-          <TabsContent value="portfolio" className="space-y-6">
-            <InvestmentJourneyChart investments={displayInvestments} demoMode={demoMode} />
+          <TabsContent value="portfolio">
             <InvestmentSummary investments={displayInvestments} />
           </TabsContent>
 
