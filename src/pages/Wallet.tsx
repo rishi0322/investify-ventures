@@ -293,7 +293,6 @@ export default function Wallet() {
 
           <PinVerifyDialog
             walletId={wallet?.id || ''}
-            expectedPin={wallet?.wallet_pin || ''}
             type="pin"
             open={pinVerifyOpen}
             onOpenChange={setPinVerifyOpen}
@@ -559,10 +558,9 @@ export default function Wallet() {
               onOpenChange={setTpinSetupOpen}
               onSuccess={fetchWalletData}
             />
-            {wallet.tpin && (
+            {wallet.tpin_set && (
               <PinVerifyDialog
                 walletId={wallet.id}
-                expectedPin={wallet.tpin}
                 type="tpin"
                 open={tpinVerifyOpen}
                 onOpenChange={setTpinVerifyOpen}
