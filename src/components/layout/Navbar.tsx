@@ -76,13 +76,22 @@ export function Navbar() {
               How It Works
             </Link>
             {user && role === 'investor' && (
-              <Link 
-                to="/ai-matching" 
-                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
-              >
-                <Brain className="h-4 w-4" />
-                AI Match
-              </Link>
+              <>
+                <Link 
+                  to="/investor/dashboard" 
+                  className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  Dashboard
+                </Link>
+                <Link 
+                  to="/ai-matching" 
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                >
+                  <Brain className="h-4 w-4" />
+                  AI Match
+                </Link>
+              </>
             )}
           </div>
 
