@@ -51,10 +51,8 @@ export default function Auth() {
     if (user && role) {
       if (role === 'admin') {
         navigate('/admin');
-      } else if (role === 'startup') {
-        navigate('/startup/dashboard');
       } else {
-        navigate('/investor/dashboard');
+        navigate('/dashboard');
       }
     }
   }, [user, role, navigate]);
