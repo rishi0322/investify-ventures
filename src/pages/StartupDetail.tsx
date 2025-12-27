@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -26,7 +27,9 @@ import {
   HeartOff,
   Loader2,
   CheckCircle2,
-  Share2
+  Share2,
+  MessageSquare,
+  Send
 } from 'lucide-react';
 
 export default function StartupDetail() {
@@ -41,6 +44,9 @@ export default function StartupDetail() {
   const [investAmount, setInvestAmount] = useState('');
   const [investing, setInvesting] = useState(false);
   const [investDialogOpen, setInvestDialogOpen] = useState(false);
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  const [message, setMessage] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -98,6 +104,47 @@ export default function StartupDetail() {
       setIsInWatchlist(true);
       toast({ title: 'Added to watchlist' });
     }
+  };
+
+  const handleContactFounder = async () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    if (!startup || !message.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Please enter a message',
+      });
+      return;
+    }
+
+    setSendingMessage(true);
+
+    const { error } = await supabase.from('messages').insert({
+      sender_id: user.id,
+      receiver_id: startup.founder_id,
+      startup_id: startup.id,
+      content: message.trim()
+    });
+
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Failed to send message',
+        description: error.message
+      });
+    } else {
+      toast({
+        title: 'Message sent!',
+        description: `Your message has been sent to ${startup.name}'s founder.`
+      });
+      setContactDialogOpen(false);
+      setMessage('');
+    }
+
+    setSendingMessage(false);
   };
 
   const handleInvest = async () => {
@@ -408,6 +455,54 @@ export default function StartupDetail() {
                             </>
                           ) : (
                             'Confirm Investment'
+                          )}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* Contact Founder Button */}
+                  <Dialog open={contactDialogOpen} onOpenChange={setContactDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="secondary" className="w-full">
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        Contact Founder
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Message {startup.name}'s Founder</DialogTitle>
+                        <DialogDescription>
+                          Send a direct message to the startup founder. They'll receive it in their inbox.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="message">Your Message</Label>
+                          <Textarea
+                            id="message"
+                            placeholder={`Hi! I'm interested in learning more about ${startup.name}...`}
+                            value={message}
+                            onChange={(e) => setMessage(e.target.value)}
+                            rows={4}
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setContactDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button onClick={handleContactFounder} disabled={sendingMessage || !message.trim()}>
+                          {sendingMessage ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Sending...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="mr-2 h-4 w-4" />
+                              Send Message
+                            </>
                           )}
                         </Button>
                       </DialogFooter>

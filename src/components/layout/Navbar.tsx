@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { NotificationBell } from '@/components/NotificationBell';
 import { 
   TrendingUp, 
   LogOut, 
@@ -88,8 +89,11 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <>
+                {/* Notification Bell */}
+                <NotificationBell />
+
                 {role === 'investor' && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <Button variant="ghost" size="icon" asChild>
                       <Link to="/watchlist">
                         <Heart className="h-4 w-4" />
