@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { WalletPinSetup, PinVerifyDialog } from '@/components/wallet/WalletPinSetup';
+import { TransactionHistory } from '@/components/wallet/TransactionHistory';
 import { 
   Wallet as WalletIcon, 
   ArrowDownToLine, 
@@ -539,67 +540,7 @@ export default function Wallet() {
         </div>
 
         {/* Transaction History */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Transaction History</CardTitle>
-            <CardDescription>Your recent blockchain transactions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {transactions.length === 0 ? (
-              <div className="text-center py-12">
-                <WalletIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">No transactions yet</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {transactions.map((tx) => (
-                  <div key={tx.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        tx.transaction_type === 'deposit' ? 'bg-accent/10' : 
-                        tx.transaction_type === 'withdrawal' ? 'bg-destructive/10' : 'bg-primary/10'
-                      }`}>
-                        {tx.transaction_type === 'deposit' ? (
-                          <ArrowDownToLine className="h-5 w-5 text-accent" />
-                        ) : tx.transaction_type === 'withdrawal' ? (
-                          <ArrowUpFromLine className="h-5 w-5 text-destructive" />
-                        ) : (
-                          <Bitcoin className="h-5 w-5 text-primary" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-medium capitalize">{tx.transaction_type}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(tx.created_at).toLocaleDateString('en-IN', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className={`font-semibold ${
-                        tx.transaction_type === 'deposit' ? 'text-accent' : 
-                        tx.transaction_type === 'withdrawal' ? 'text-destructive' : ''
-                      }`}>
-                        {tx.transaction_type === 'deposit' ? '+' : '-'}{tx.amount} {tx.crypto_currency}
-                      </p>
-                      <Badge variant={tx.status === 'confirmed' ? 'default' : tx.status === 'pending' ? 'secondary' : 'destructive'} className="text-xs">
-                        {tx.status === 'confirmed' ? <CheckCircle2 className="h-3 w-3 mr-1" /> : 
-                         tx.status === 'pending' ? <Clock className="h-3 w-3 mr-1" /> : 
-                         <XCircle className="h-3 w-3 mr-1" />}
-                        {tx.status}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <TransactionHistory transactions={transactions} />
 
         {/* PIN Setup Dialogs */}
         {wallet && (
