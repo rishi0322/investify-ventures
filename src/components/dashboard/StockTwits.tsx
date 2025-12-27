@@ -122,6 +122,76 @@ const sampleTweets: Tweet[] = [
   }
 ];
 
+// Sample discussions/threads
+interface Discussion {
+  id: string;
+  title: string;
+  author: string;
+  replies: number;
+  views: number;
+  lastActivity: string;
+  pinned?: boolean;
+  tags: string[];
+}
+
+const sampleDiscussions: Discussion[] = [
+  {
+    id: 'd1',
+    title: '📊 Weekly Market Analysis Thread - December 2024',
+    author: 'MarketPro',
+    replies: 234,
+    views: 4521,
+    lastActivity: '2m ago',
+    pinned: true,
+    tags: ['Analysis', 'Weekly']
+  },
+  {
+    id: 'd2',
+    title: 'Best Fintech startups to watch in 2025?',
+    author: 'TechInvestor',
+    replies: 89,
+    views: 1234,
+    lastActivity: '15m ago',
+    tags: ['Fintech', 'Discussion']
+  },
+  {
+    id: 'd3',
+    title: 'AI Startup valuations - are they justified?',
+    author: 'SkepticalSam',
+    replies: 156,
+    views: 2890,
+    lastActivity: '32m ago',
+    tags: ['AI', 'Valuations']
+  },
+  {
+    id: 'd4',
+    title: 'My journey: ₹10L to ₹50L in 18 months',
+    author: 'GrowthMindset',
+    replies: 445,
+    views: 8923,
+    lastActivity: '1h ago',
+    tags: ['Success Story', 'Portfolio']
+  },
+  {
+    id: 'd5',
+    title: 'How to evaluate early-stage startups?',
+    author: 'AngelInvestor',
+    replies: 78,
+    views: 1567,
+    lastActivity: '2h ago',
+    tags: ['Guide', 'Due Diligence']
+  },
+  {
+    id: 'd6',
+    title: 'Green Energy sector outlook - bullish or bubble?',
+    author: 'CleanTechFan',
+    replies: 112,
+    views: 2145,
+    lastActivity: '3h ago',
+    tags: ['Green Energy', 'Debate']
+  }
+];
+
 const trendingTopics = [
   { tag: '#QuantumAI', posts: 1234 },
   { tag: '#GreenEnergy', posts: 892 },
@@ -134,6 +204,7 @@ export function StockTwits() {
   const [newTweet, setNewTweet] = useState('');
   const [tweets, setTweets] = useState(sampleTweets);
   const [activeTab, setActiveTab] = useState('all');
+  const [mainView, setMainView] = useState<'feed' | 'discussions'>('feed');
 
   const handlePost = () => {
     if (!newTweet.trim()) return;
@@ -166,63 +237,130 @@ export function StockTwits() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MessageCircle className="h-5 w-5 text-primary" />
-          StartupTwits
-          <Badge variant="secondary">Live</Badge>
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <MessageCircle className="h-5 w-5 text-primary" />
+            StartupTwits
+            <Badge variant="secondary">Live</Badge>
+          </CardTitle>
+          <div className="flex gap-2">
+            <Button 
+              size="sm" 
+              variant={mainView === 'feed' ? 'default' : 'outline'}
+              onClick={() => setMainView('feed')}
+            >
+              Feed
+            </Button>
+            <Button 
+              size="sm" 
+              variant={mainView === 'discussions' ? 'default' : 'outline'}
+              onClick={() => setMainView('discussions')}
+            >
+              Discussions
+            </Button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Main Feed */}
           <div className="lg:col-span-2 space-y-4">
-            {/* Post Box */}
-            <div className="flex gap-3 p-4 border rounded-lg bg-muted/30">
-              <Avatar className="h-10 w-10">
-                <AvatarFallback>ME</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 space-y-2">
-                <Input
-                  placeholder="What's your market take?"
-                  value={newTweet}
-                  onChange={(e) => setNewTweet(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handlePost()}
-                />
-                <div className="flex justify-between items-center">
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="text-success">
+            {mainView === 'feed' ? (
+              <>
+                {/* Post Box */}
+                <div className="flex gap-3 p-4 border rounded-lg bg-muted/30">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback>ME</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 space-y-2">
+                    <Input
+                      placeholder="What's your market take?"
+                      value={newTweet}
+                      onChange={(e) => setNewTweet(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handlePost()}
+                    />
+                    <div className="flex justify-between items-center">
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" className="text-success">
+                          <TrendingUp className="h-3 w-3 mr-1" />
+                          Bullish
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-destructive">
+                          <TrendingDown className="h-3 w-3 mr-1" />
+                          Bearish
+                        </Button>
+                      </div>
+                      <Button size="sm" onClick={handlePost}>
+                        <Send className="h-4 w-4 mr-1" />
+                        Post
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Filter Tabs */}
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
+                  <TabsList>
+                    <TabsTrigger value="all">All</TabsTrigger>
+                    <TabsTrigger value="bullish" className="text-success">
                       <TrendingUp className="h-3 w-3 mr-1" />
                       Bullish
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-destructive">
+                    </TabsTrigger>
+                    <TabsTrigger value="bearish" className="text-destructive">
                       <TrendingDown className="h-3 w-3 mr-1" />
                       Bearish
-                    </Button>
-                  </div>
-                  <Button size="sm" onClick={handlePost}>
-                    <Send className="h-4 w-4 mr-1" />
-                    Post
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </>
+            ) : (
+              /* Discussions View */
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold">Community Discussions</h3>
+                  <Button size="sm">
+                    <MessageCircle className="h-4 w-4 mr-1" />
+                    New Thread
                   </Button>
                 </div>
+                <div className="space-y-2">
+                  {sampleDiscussions.map((discussion) => (
+                    <div 
+                      key={discussion.id} 
+                      className={`p-4 border rounded-lg hover:bg-muted/30 transition-colors cursor-pointer ${discussion.pinned ? 'bg-primary/5 border-primary/20' : ''}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            {discussion.pinned && (
+                              <Badge variant="secondary" className="text-xs bg-primary/10 text-primary">📌 Pinned</Badge>
+                            )}
+                            <h4 className="font-medium text-sm">{discussion.title}</h4>
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <span>by @{discussion.author}</span>
+                            <span>·</span>
+                            <span>{discussion.replies} replies</span>
+                            <span>·</span>
+                            <span>{discussion.views} views</span>
+                            <span>·</span>
+                            <span>{discussion.lastActivity}</span>
+                          </div>
+                          <div className="flex gap-1 mt-2">
+                            {discussion.tags.map((tag) => (
+                              <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Filter Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList>
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="bullish" className="text-success">
-                  <TrendingUp className="h-3 w-3 mr-1" />
-                  Bullish
-                </TabsTrigger>
-                <TabsTrigger value="bearish" className="text-destructive">
-                  <TrendingDown className="h-3 w-3 mr-1" />
-                  Bearish
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-
-            {/* Tweets */}
+            {/* Tweets - only show in feed view */}
+            {mainView === 'feed' && (
             <div className="space-y-4 max-h-[500px] overflow-y-auto">
               {filteredTweets.map((tweet) => (
                 <div key={tweet.id} className="p-4 border rounded-lg hover:bg-muted/30 transition-colors">
@@ -292,6 +430,7 @@ export function StockTwits() {
                 </div>
               ))}
             </div>
+            )}
           </div>
 
           {/* Trending Sidebar */}
