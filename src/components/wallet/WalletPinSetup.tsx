@@ -40,18 +40,17 @@ export function WalletPinSetup({ walletId, type, open, onOpenChange, onSuccess }
     setLoading(true);
 
     try {
-      const updateData = type === 'pin' 
-        ? { wallet_pin: pin, pin_set: true }
-        : { tpin: pin, tpin_set: true };
-
-      const { error } = await supabase
-        .from('user_wallets')
-        .update(updateData)
-        .eq('id', walletId);
+      // Call the edge function to hash and store the PIN securely
+      const { data, error } = await supabase.functions.invoke('wallet-pin', {
+        body: { action: 'set', pin, type }
+      });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast({ title: `${type === 'pin' ? 'Wallet PIN' : 'TPIN'} set successfully!` });
+      setPin('');
+      setConfirmPin('');
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
@@ -113,7 +112,6 @@ export function WalletPinSetup({ walletId, type, open, onOpenChange, onSuccess }
 
 interface PinVerifyDialogProps {
   walletId: string;
-  expectedPin: string;
   type: 'pin' | 'tpin';
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -122,7 +120,7 @@ interface PinVerifyDialogProps {
 }
 
 export function PinVerifyDialog({ 
-  expectedPin, 
+  walletId,
   type, 
   open, 
   onOpenChange, 
@@ -131,17 +129,40 @@ export function PinVerifyDialog({
 }: PinVerifyDialogProps) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleVerify = () => {
-    if (pin === expectedPin) {
-      setPin('');
-      setError('');
-      onSuccess();
-      onOpenChange(false);
-    } else {
-      setError('Incorrect PIN');
-      toast({ variant: 'destructive', title: 'Incorrect PIN' });
+  const handleVerify = async () => {
+    if (pin.length !== 4) {
+      setError('PIN must be 4 digits');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      // Call the edge function to verify the PIN securely
+      const { data, error: invokeError } = await supabase.functions.invoke('wallet-pin', {
+        body: { action: 'verify', pin, type }
+      });
+
+      if (invokeError) throw invokeError;
+
+      if (data?.verified) {
+        setPin('');
+        setError('');
+        onSuccess();
+        onOpenChange(false);
+      } else {
+        setError('Incorrect PIN');
+        toast({ variant: 'destructive', title: 'Incorrect PIN' });
+      }
+    } catch (error: any) {
+      setError('Verification failed');
+      toast({ variant: 'destructive', title: 'Verification failed', description: error.message });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -173,9 +194,26 @@ export function PinVerifyDialog({
         
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleVerify} disabled={pin.length !== 4}>Verify</Button>
+          <Button onClick={handleVerify} disabled={pin.length !== 4 || loading}>
+            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            Verify
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
+}
+
+// Utility function to verify TPIN inline (for investment flow)
+export async function verifyTpin(pin: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.functions.invoke('wallet-pin', {
+      body: { action: 'verify', pin, type: 'tpin' }
+    });
+    
+    if (error) return false;
+    return data?.verified === true;
+  } catch {
+    return false;
+  }
 }

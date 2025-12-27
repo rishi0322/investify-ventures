@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Startup, SECTOR_LABELS, FUNDING_STAGE_LABELS, SECTOR_ICONS } from '@/types/database';
 import { InvestmentSummary } from '@/components/investment/EquityDisplay';
 import { ProfitCalculator } from '@/components/investment/ProfitCalculator';
+import { verifyTpin } from '@/components/wallet/WalletPinSetup';
 import { 
   ArrowLeft, 
   TrendingUp, 
@@ -56,8 +57,8 @@ export default function StartupDetail() {
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [tpinRequired, setTpinRequired] = useState(false);
   const [tpinInput, setTpinInput] = useState('');
-  const [walletTpin, setWalletTpin] = useState<string | null>(null);
   const [tpinSet, setTpinSet] = useState(false);
+  const [verifyingTpin, setVerifyingTpin] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -74,13 +75,12 @@ export default function StartupDetail() {
     
     const { data } = await supabase
       .from('user_wallets')
-      .select('balance, tpin, tpin_set')
+      .select('balance, tpin_set')
       .eq('user_id', user.id)
       .maybeSingle();
     
     if (data) {
       setWalletBalance(data.balance || 0);
-      setWalletTpin(data.tpin);
       setTpinSet(data.tpin_set || false);
     }
   };
@@ -222,9 +222,13 @@ export default function StartupDetail() {
       return;
     }
 
-    // Verify TPIN if required
+    // Verify TPIN if required using secure server-side verification
     if (tpinSet && tpinRequired) {
-      if (tpinInput !== walletTpin) {
+      setVerifyingTpin(true);
+      const isValid = await verifyTpin(tpinInput);
+      setVerifyingTpin(false);
+      
+      if (!isValid) {
         toast({
           variant: 'destructive',
           title: 'Invalid TPIN',
