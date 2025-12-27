@@ -103,24 +103,33 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
+          equity_percentage: number | null
           id: string
           investor_id: string
+          purchase_price_per_share: number | null
+          shares_acquired: number | null
           startup_id: string
           status: string
         }
         Insert: {
           amount: number
           created_at?: string
+          equity_percentage?: number | null
           id?: string
           investor_id: string
+          purchase_price_per_share?: number | null
+          shares_acquired?: number | null
           startup_id: string
           status?: string
         }
         Update: {
           amount?: number
           created_at?: string
+          equity_percentage?: number | null
           id?: string
           investor_id?: string
+          purchase_price_per_share?: number | null
+          shares_acquired?: number | null
           startup_id?: string
           status?: string
         }
@@ -222,7 +231,9 @@ export type Database = {
           sector: Database["public"]["Enums"]["startup_sector"]
           tagline: string
           team_size: number | null
+          total_shares: number | null
           updated_at: string
+          valuation: number | null
           verification_status: Database["public"]["Enums"]["verification_status"]
           verified_at: string | null
           verified_by: string | null
@@ -247,7 +258,9 @@ export type Database = {
           sector: Database["public"]["Enums"]["startup_sector"]
           tagline: string
           team_size?: number | null
+          total_shares?: number | null
           updated_at?: string
+          valuation?: number | null
           verification_status?: Database["public"]["Enums"]["verification_status"]
           verified_at?: string | null
           verified_by?: string | null
@@ -272,7 +285,9 @@ export type Database = {
           sector?: Database["public"]["Enums"]["startup_sector"]
           tagline?: string
           team_size?: number | null
+          total_shares?: number | null
           updated_at?: string
+          valuation?: number | null
           verification_status?: Database["public"]["Enums"]["verification_status"]
           verified_at?: string | null
           verified_by?: string | null
@@ -306,25 +321,37 @@ export type Database = {
           balance: number
           created_at: string
           id: string
+          pin_set: boolean | null
+          tpin: string | null
+          tpin_set: boolean | null
           updated_at: string
           user_id: string
           wallet_address: string | null
+          wallet_pin: string | null
         }
         Insert: {
           balance?: number
           created_at?: string
           id?: string
+          pin_set?: boolean | null
+          tpin?: string | null
+          tpin_set?: boolean | null
           updated_at?: string
           user_id: string
           wallet_address?: string | null
+          wallet_pin?: string | null
         }
         Update: {
           balance?: number
           created_at?: string
           id?: string
+          pin_set?: boolean | null
+          tpin?: string | null
+          tpin_set?: boolean | null
           updated_at?: string
           user_id?: string
           wallet_address?: string | null
+          wallet_pin?: string | null
         }
         Relationships: []
       }
