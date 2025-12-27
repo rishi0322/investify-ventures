@@ -187,15 +187,6 @@ export default function StartupDetail() {
       return;
     }
 
-    if (role !== 'investor') {
-      toast({
-        variant: 'destructive',
-        title: 'Cannot invest',
-        description: 'Only investors can make investments.',
-      });
-      return;
-    }
-
     const amount = parseInt(investAmount);
     if (!startup || isNaN(amount) || amount < startup.min_investment) {
       toast({
@@ -282,10 +273,16 @@ export default function StartupDetail() {
       fetchStartup();
       fetchWallet();
     } catch (error: any) {
+      // Map database errors to user-friendly messages
+      let message = 'An error occurred. Please try again.';
+      if (error.code === '23514') message = 'Invalid investment amount';
+      if (error.code === '42501' || error.message?.includes('RLS')) message = 'Only registered investors can make investments. Please contact support.';
+      if (error.message?.includes('balance')) message = 'Insufficient wallet balance';
+      
       toast({
         variant: 'destructive',
         title: 'Investment failed',
-        description: error.message,
+        description: message,
       });
     }
     

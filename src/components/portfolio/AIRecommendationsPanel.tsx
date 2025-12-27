@@ -7,7 +7,8 @@ import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Startup, SECTOR_LABELS, SECTOR_ICONS, Investment } from '@/types/database';
+import { Startup, SECTOR_LABELS, SECTOR_ICONS, Investment, FUNDING_STAGE_LABELS } from '@/types/database';
+import { sampleAIRecommendations } from '@/data/sampleAIRecommendations';
 import { 
   Brain, 
   Sparkles, 
@@ -24,14 +25,18 @@ interface Recommendation {
   startup_name: string;
   match_score: number;
   reasoning: string;
+  sector?: string;
+  min_investment?: number;
+  logo_emoji?: string;
 }
 
 interface AIRecommendationsPanelProps {
   userId: string;
   investments: (Investment & { startup: Startup })[];
+  demoMode?: boolean;
 }
 
-export function AIRecommendationsPanel({ userId, investments }: AIRecommendationsPanelProps) {
+export function AIRecommendationsPanel({ userId, investments, demoMode = false }: AIRecommendationsPanelProps) {
   const { toast } = useToast();
   const [startups, setStartups] = useState<Startup[]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
@@ -41,6 +46,21 @@ export function AIRecommendationsPanel({ userId, investments }: AIRecommendation
   useEffect(() => {
     fetchStartups();
   }, []);
+
+  useEffect(() => {
+    // Auto-load demo recommendations in demo mode
+    if (demoMode && recommendations.length === 0) {
+      setRecommendations(sampleAIRecommendations.map(r => ({
+        startup_id: r.startup_id,
+        startup_name: r.startup_name,
+        match_score: r.match_score,
+        reasoning: r.reasoning,
+        sector: r.sector,
+        min_investment: r.min_investment,
+        logo_emoji: r.logo_emoji
+      })));
+    }
+  }, [demoMode]);
 
   const fetchStartups = async () => {
     const { data } = await supabase
@@ -208,7 +228,7 @@ export function AIRecommendationsPanel({ userId, investments }: AIRecommendation
           <div className="space-y-4">
             {recommendations.slice(0, 5).map((rec) => {
               const startup = getStartup(rec.startup_id);
-              if (!startup) return null;
+              const sectorKey = (rec.sector || startup?.sector || 'technology') as keyof typeof SECTOR_ICONS;
 
               return (
                 <div 
@@ -218,12 +238,12 @@ export function AIRecommendationsPanel({ userId, investments }: AIRecommendation
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-xl">
-                        {SECTOR_ICONS[startup.sector]}
+                        {rec.logo_emoji || SECTOR_ICONS[sectorKey]}
                       </div>
                       <div>
                         <h4 className="font-semibold">{rec.startup_name}</h4>
                         <p className="text-xs text-muted-foreground">
-                          {SECTOR_LABELS[startup.sector]} · Min ₹{startup.min_investment.toLocaleString('en-IN')}
+                          {SECTOR_LABELS[sectorKey]} · Min ₹{(rec.min_investment || startup?.min_investment || 500).toLocaleString('en-IN')}
                         </p>
                       </div>
                     </div>
@@ -241,17 +261,25 @@ export function AIRecommendationsPanel({ userId, investments }: AIRecommendation
                   <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{rec.reasoning}</p>
                   
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" asChild className="flex-1">
-                      <Link to={`/startups/${startup.id}`}>
-                        View Details
-                        <ArrowRight className="h-3 w-3 ml-1" />
-                      </Link>
+                    <Button variant="outline" size="sm" className="flex-1" asChild={!!startup}>
+                      {startup ? (
+                        <Link to={`/startups/${startup.id}`}>
+                          View Details
+                          <ArrowRight className="h-3 w-3 ml-1" />
+                        </Link>
+                      ) : (
+                        <span>View Details <ArrowRight className="h-3 w-3 ml-1" /></span>
+                      )}
                     </Button>
-                    <Button size="sm" asChild className="flex-1">
-                      <Link to={`/startups/${startup.id}`}>
-                        <TrendingUp className="h-3 w-3 mr-1" />
-                        Invest Now
-                      </Link>
+                    <Button size="sm" className="flex-1" asChild={!!startup}>
+                      {startup ? (
+                        <Link to={`/startups/${startup.id}`}>
+                          <TrendingUp className="h-3 w-3 mr-1" />
+                          Invest Now
+                        </Link>
+                      ) : (
+                        <span><TrendingUp className="h-3 w-3 mr-1" />Invest Now</span>
+                      )}
                     </Button>
                   </div>
                 </div>
