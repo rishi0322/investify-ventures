@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { WalletPinSetup, PinVerifyDialog } from '@/components/wallet/WalletPinSetup';
 import { 
   Wallet as WalletIcon, 
   ArrowDownToLine, 
@@ -21,7 +22,10 @@ import {
   XCircle,
   Copy,
   RefreshCcw,
-  Loader2
+  Loader2,
+  Lock,
+  Shield,
+  Settings
 } from 'lucide-react';
 
 interface Transaction {
@@ -39,6 +43,10 @@ interface UserWallet {
   id: string;
   wallet_address: string | null;
   balance: number;
+  wallet_pin: string | null;
+  tpin: string | null;
+  pin_set: boolean;
+  tpin_set: boolean;
 }
 
 export default function Wallet() {
@@ -55,6 +63,14 @@ export default function Wallet() {
   const [processing, setProcessing] = useState(false);
   const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
+  
+  // PIN related states
+  const [pinSetupOpen, setPinSetupOpen] = useState(false);
+  const [tpinSetupOpen, setTpinSetupOpen] = useState(false);
+  const [pinVerifyOpen, setPinVerifyOpen] = useState(false);
+  const [tpinVerifyOpen, setTpinVerifyOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'deposit' | 'withdraw' | null>(null);
+  const [walletLocked, setWalletLocked] = useState(true);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -67,7 +83,6 @@ export default function Wallet() {
   const fetchWalletData = async () => {
     if (!user) return;
 
-    // Fetch or create wallet
     let { data: walletData } = await supabase
       .from('user_wallets')
       .select('*')
@@ -87,8 +102,14 @@ export default function Wallet() {
     }
 
     setWallet(walletData as UserWallet);
+    
+    // If PIN is set, wallet should be locked initially
+    if (walletData?.pin_set) {
+      setWalletLocked(true);
+    } else {
+      setWalletLocked(false);
+    }
 
-    // Fetch transactions
     const { data: txData } = await supabase
       .from('blockchain_transactions')
       .select('*')
@@ -97,6 +118,26 @@ export default function Wallet() {
 
     setTransactions((txData || []) as Transaction[]);
     setLoading(false);
+  };
+
+  const unlockWallet = () => {
+    if (wallet?.pin_set) {
+      setPinVerifyOpen(true);
+    } else {
+      setWalletLocked(false);
+    }
+  };
+
+  const handlePinVerifySuccess = () => {
+    setWalletLocked(false);
+    toast({ title: 'Wallet unlocked!' });
+  };
+
+  const handleTpinVerifySuccess = () => {
+    if (pendingAction === 'withdraw') {
+      executeWithdraw();
+    }
+    setPendingAction(null);
   };
 
   const handleDeposit = async () => {
@@ -115,7 +156,6 @@ export default function Wallet() {
 
     const txHash = `0x${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`;
 
-    // Create transaction record
     await supabase.from('blockchain_transactions').insert({
       user_id: user.id,
       transaction_type: 'deposit',
@@ -127,7 +167,6 @@ export default function Wallet() {
       confirmed_at: new Date().toISOString()
     });
 
-    // Update wallet balance
     await supabase
       .from('user_wallets')
       .update({ balance: (wallet.balance || 0) + amount })
@@ -144,8 +183,8 @@ export default function Wallet() {
     fetchWalletData();
   };
 
-  const handleWithdraw = async () => {
-    if (!user || !wallet) return;
+  const initiateWithdraw = () => {
+    if (!wallet) return;
 
     const amount = parseFloat(withdrawAmount);
     if (isNaN(amount) || amount <= 0) {
@@ -163,14 +202,25 @@ export default function Wallet() {
       return;
     }
 
+    // If TPIN is set, require verification
+    if (wallet.tpin_set && wallet.tpin) {
+      setPendingAction('withdraw');
+      setTpinVerifyOpen(true);
+    } else {
+      executeWithdraw();
+    }
+  };
+
+  const executeWithdraw = async () => {
+    if (!user || !wallet) return;
+
+    const amount = parseFloat(withdrawAmount);
     setProcessing(true);
 
-    // Simulate blockchain confirmation
     await new Promise(resolve => setTimeout(resolve, 2500));
 
     const txHash = `0x${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`;
 
-    // Create transaction record
     await supabase.from('blockchain_transactions').insert({
       user_id: user.id,
       transaction_type: 'withdrawal',
@@ -182,7 +232,6 @@ export default function Wallet() {
       confirmed_at: new Date().toISOString()
     });
 
-    // Update wallet balance
     await supabase
       .from('user_wallets')
       .update({ balance: wallet.balance - amount })
@@ -222,6 +271,39 @@ export default function Wallet() {
     );
   }
 
+  // Locked wallet view
+  if (walletLocked && wallet?.pin_set) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-md mx-auto text-center py-20">
+            <div className="w-24 h-24 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-6">
+              <Lock className="h-12 w-12 text-primary" />
+            </div>
+            <h1 className="text-3xl font-display font-bold mb-4">Wallet Locked</h1>
+            <p className="text-muted-foreground mb-8">
+              Enter your wallet PIN to access your funds and transaction history.
+            </p>
+            <Button size="lg" onClick={unlockWallet}>
+              <Lock className="h-5 w-5 mr-2" />
+              Unlock Wallet
+            </Button>
+          </div>
+
+          <PinVerifyDialog
+            walletId={wallet?.id || ''}
+            expectedPin={wallet?.wallet_pin || ''}
+            type="pin"
+            open={pinVerifyOpen}
+            onOpenChange={setPinVerifyOpen}
+            onSuccess={handlePinVerifySuccess}
+            title="Unlock Wallet"
+          />
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
@@ -230,31 +312,78 @@ export default function Wallet() {
             <h1 className="text-3xl font-display font-bold mb-2">Crypto Wallet</h1>
             <p className="text-muted-foreground">Manage your blockchain payments and withdrawals</p>
           </div>
-          <Button variant="outline" onClick={fetchWalletData}>
-            <RefreshCcw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={fetchWalletData}>
+              <RefreshCcw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         </div>
+
+        {/* Security Setup Banner */}
+        {wallet && (!wallet.pin_set || !wallet.tpin_set) && (
+          <Card className="mb-6 border-warning/50 bg-warning/5">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Shield className="h-5 w-5 text-warning" />
+                  <div>
+                    <p className="font-medium">Enhance Your Security</p>
+                    <p className="text-sm text-muted-foreground">
+                      {!wallet.pin_set && !wallet.tpin_set 
+                        ? 'Set up Wallet PIN and TPIN for added security'
+                        : !wallet.pin_set 
+                        ? 'Set up Wallet PIN to lock your wallet'
+                        : 'Set up TPIN for transaction verification'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  {!wallet.pin_set && (
+                    <Button size="sm" variant="outline" onClick={() => setPinSetupOpen(true)}>
+                      <Lock className="h-4 w-4 mr-1" />
+                      Set PIN
+                    </Button>
+                  )}
+                  {!wallet.tpin_set && (
+                    <Button size="sm" variant="outline" onClick={() => setTpinSetupOpen(true)}>
+                      <Shield className="h-4 w-4 mr-1" />
+                      Set TPIN
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Wallet Overview */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <Card className="md:col-span-2 gradient-hero border-primary/20">
+          <Card className="md:col-span-2 gradient-card border-primary/20">
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-6">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Total Balance</p>
                   <p className="text-4xl font-display font-bold flex items-center gap-2">
-                    <Bitcoin className="h-8 w-8 text-amber-500" />
+                    <Bitcoin className="h-8 w-8 text-primary" />
                     {wallet?.balance?.toFixed(4) || '0.0000'} ETH
                   </p>
                   <p className="text-sm text-muted-foreground mt-1">
                     ≈ ₹{((wallet?.balance || 0) * 250000).toLocaleString('en-IN')}
                   </p>
                 </div>
-                <Badge variant="secondary" className="bg-accent/10 text-accent">
-                  <CheckCircle2 className="h-3 w-3 mr-1" />
-                  Connected
-                </Badge>
+                <div className="flex items-center gap-2">
+                  {wallet?.pin_set && (
+                    <Badge variant="secondary" className="bg-accent/10 text-accent">
+                      <Lock className="h-3 w-3 mr-1" />
+                      Secured
+                    </Badge>
+                  )}
+                  <Badge variant="secondary" className="bg-accent/10 text-accent">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    Connected
+                  </Badge>
+                </div>
               </div>
 
               <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg mb-6">
@@ -276,7 +405,7 @@ export default function Wallet() {
                     <DialogHeader>
                       <DialogTitle>Deposit ETH</DialogTitle>
                       <DialogDescription>
-                        Add funds to your wallet (Demo - no real transaction)
+                        Add funds to your wallet (Demo - simulated transaction)
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
@@ -312,7 +441,8 @@ export default function Wallet() {
                     <DialogHeader>
                       <DialogTitle>Withdraw ETH</DialogTitle>
                       <DialogDescription>
-                        Send funds to an external wallet (Demo - no real transaction)
+                        Send funds to an external wallet (Demo - simulated transaction)
+                        {wallet?.tpin_set && <span className="block mt-1 text-warning">TPIN verification required</span>}
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
@@ -340,9 +470,9 @@ export default function Wallet() {
                     </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setWithdrawOpen(false)}>Cancel</Button>
-                      <Button onClick={handleWithdraw} disabled={processing}>
+                      <Button onClick={initiateWithdraw} disabled={processing}>
                         {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                        Confirm Withdrawal
+                        {wallet?.tpin_set ? 'Verify & Withdraw' : 'Confirm Withdrawal'}
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -353,9 +483,45 @@ export default function Wallet() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Quick Stats</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Security Settings
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm font-medium">Wallet PIN</p>
+                  <p className="text-xs text-muted-foreground">Lock wallet access</p>
+                </div>
+                {wallet?.pin_set ? (
+                  <Badge variant="default" className="bg-accent">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    Active
+                  </Badge>
+                ) : (
+                  <Button size="sm" variant="outline" onClick={() => setPinSetupOpen(true)}>
+                    Set Up
+                  </Button>
+                )}
+              </div>
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm font-medium">Transaction PIN</p>
+                  <p className="text-xs text-muted-foreground">Verify withdrawals</p>
+                </div>
+                {wallet?.tpin_set ? (
+                  <Badge variant="default" className="bg-accent">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    Active
+                  </Badge>
+                ) : (
+                  <Button size="sm" variant="outline" onClick={() => setTpinSetupOpen(true)}>
+                    Set Up
+                  </Button>
+                )}
+              </div>
+              <hr className="border-border" />
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Total Deposits</span>
                 <span className="font-medium">
@@ -366,12 +532,6 @@ export default function Wallet() {
                 <span className="text-sm text-muted-foreground">Total Withdrawals</span>
                 <span className="font-medium">
                   {transactions.filter(t => t.transaction_type === 'withdrawal').length}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Investments Made</span>
-                <span className="font-medium">
-                  {transactions.filter(t => t.transaction_type === 'investment').length}
                 </span>
               </div>
             </CardContent>
@@ -440,6 +600,37 @@ export default function Wallet() {
             )}
           </CardContent>
         </Card>
+
+        {/* PIN Setup Dialogs */}
+        {wallet && (
+          <>
+            <WalletPinSetup
+              walletId={wallet.id}
+              type="pin"
+              open={pinSetupOpen}
+              onOpenChange={setPinSetupOpen}
+              onSuccess={fetchWalletData}
+            />
+            <WalletPinSetup
+              walletId={wallet.id}
+              type="tpin"
+              open={tpinSetupOpen}
+              onOpenChange={setTpinSetupOpen}
+              onSuccess={fetchWalletData}
+            />
+            {wallet.tpin && (
+              <PinVerifyDialog
+                walletId={wallet.id}
+                expectedPin={wallet.tpin}
+                type="tpin"
+                open={tpinVerifyOpen}
+                onOpenChange={setTpinVerifyOpen}
+                onSuccess={handleTpinVerifySuccess}
+                title="Verify Transaction PIN"
+              />
+            )}
+          </>
+        )}
       </div>
     </Layout>
   );
