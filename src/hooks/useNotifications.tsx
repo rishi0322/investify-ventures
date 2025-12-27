@@ -86,7 +86,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             description: `Your investment has been successfully processed.`,
             read: false,
             created_at: new Date().toISOString(),
-            link: '/investor/dashboard'
+            link: '/dashboard'
           };
           
           setNotifications(prev => [newNotification, ...prev]);
