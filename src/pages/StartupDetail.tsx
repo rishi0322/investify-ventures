@@ -150,6 +150,12 @@ export default function StartupDetail() {
     setSendingMessage(false);
   };
 
+  // Get valuation - use default if not set
+  const getValuation = () => {
+    // @ts-ignore - valuation may not be in type yet
+    return startup?.valuation || 10000000;
+  };
+
   const handleInvest = async () => {
     if (!user) {
       navigate('/auth');
@@ -177,8 +183,15 @@ export default function StartupDetail() {
 
     setInvesting(true);
 
-    // Mock payment - in production this would integrate with a payment gateway
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Calculate equity details
+    const valuation = getValuation();
+    const totalShares = 1000000;
+    const sharesAcquired = Math.floor((amount / valuation) * totalShares);
+    const equityPercentage = (amount / valuation) * 100;
+    const pricePerShare = valuation / totalShares;
+
+    // Simulate payment processing
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     const { error } = await supabase
       .from('investments')
@@ -186,6 +199,9 @@ export default function StartupDetail() {
         investor_id: user.id,
         startup_id: id,
         amount,
+        shares_acquired: sharesAcquired,
+        equity_percentage: equityPercentage,
+        purchase_price_per_share: pricePerShare,
       });
 
     if (error) {
@@ -196,12 +212,12 @@ export default function StartupDetail() {
       });
     } else {
       toast({
-        title: 'Investment successful!',
-        description: `You've invested ₹${amount.toLocaleString('en-IN')} in ${startup?.name}`,
+        title: '🎉 Investment successful!',
+        description: `You now own ${sharesAcquired.toLocaleString('en-IN')} shares (${equityPercentage.toFixed(4)}%) of ${startup?.name}`,
       });
       setInvestDialogOpen(false);
       setInvestAmount('');
-      fetchStartup(); // Refresh to show updated amount
+      fetchStartup();
     }
     
     setInvesting(false);
@@ -389,6 +405,13 @@ export default function StartupDetail() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Profit Calculator */}
+            <ProfitCalculator 
+              startupName={startup.name}
+              valuation={getValuation()}
+              minInvestment={startup.min_investment}
+            />
           </div>
 
           {/* Sidebar */}
@@ -414,6 +437,10 @@ export default function StartupDetail() {
                       <span className="text-muted-foreground">Min Investment</span>
                       <span className="font-medium">₹{startup.min_investment.toLocaleString('en-IN')}</span>
                     </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Valuation</span>
+                      <span className="font-medium">₹{(getValuation() / 10000000).toFixed(1)} Cr</span>
+                    </div>
                   </div>
 
                   <Dialog open={investDialogOpen} onOpenChange={setInvestDialogOpen}>
@@ -423,7 +450,7 @@ export default function StartupDetail() {
                         Invest Now
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="max-w-lg">
                       <DialogHeader>
                         <DialogTitle>Invest in {startup.name}</DialogTitle>
                         <DialogDescription>
@@ -442,8 +469,17 @@ export default function StartupDetail() {
                             min={startup.min_investment}
                           />
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          This is a mock investment for demo purposes. No actual payment will be processed.
+                        
+                        {investAmount && parseInt(investAmount) >= startup.min_investment && (
+                          <InvestmentSummary 
+                            amount={parseInt(investAmount)} 
+                            valuation={getValuation()} 
+                            startupName={startup.name}
+                          />
+                        )}
+
+                        <p className="text-xs text-muted-foreground">
+                          This is a simulated investment for demo purposes. No actual payment will be processed.
                         </p>
                       </div>
                       <DialogFooter>
@@ -454,10 +490,13 @@ export default function StartupDetail() {
                           {investing ? (
                             <>
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Processing...
+                              Processing Payment...
                             </>
                           ) : (
-                            'Confirm Investment'
+                            <>
+                              <PieChart className="mr-2 h-4 w-4" />
+                              Confirm Investment
+                            </>
                           )}
                         </Button>
                       </DialogFooter>
