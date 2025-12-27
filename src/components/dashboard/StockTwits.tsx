@@ -59,7 +59,7 @@ const sampleTweets: Tweet[] = [
   },
   {
     id: '3',
-    user: { name: 'Startup Watcher', handle: '@startupwatch' },
+    user: { name: 'Startup Watcher', handle: '@startupwatch', verified: false },
     content: 'GreenEnergy Co securing government contracts left and right! This could be the next big thing in the clean energy space. 🌱⚡',
     timestamp: '23m ago',
     likes: 445,
