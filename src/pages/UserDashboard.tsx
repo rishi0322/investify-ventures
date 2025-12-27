@@ -17,6 +17,7 @@ import { StockTwits } from '@/components/dashboard/StockTwits';
 import { InvestmentSummary } from '@/components/dashboard/InvestmentSummary';
 import { WalletWidget } from '@/components/dashboard/WalletWidget';
 import { AIRecommendationsPanel } from '@/components/portfolio/AIRecommendationsPanel';
+import { ProfileSettings } from '@/components/profile/ProfileSettings';
 import { sampleInvestments, sampleWatchlist } from '@/data/sampleInvestments';
 import { 
   TrendingUp, 
@@ -41,7 +42,8 @@ import {
   CheckCircle2,
   Star,
   Globe,
-  Shield
+  Shield,
+  UserCircle
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -244,7 +246,7 @@ export default function UserDashboard() {
 
         {/* Main Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-6 w-full max-w-3xl bg-muted/50 p-1 rounded-xl">
+          <TabsList className="grid grid-cols-7 w-full max-w-4xl bg-muted/50 p-1 rounded-xl">
             <TabsTrigger value="overview" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <Briefcase className="h-4 w-4 mr-2" />
               Overview
@@ -268,6 +270,10 @@ export default function UserDashboard() {
             <TabsTrigger value="community" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <MessageCircle className="h-4 w-4 mr-2" />
               Social
+            </TabsTrigger>
+            <TabsTrigger value="profile" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <UserCircle className="h-4 w-4 mr-2" />
+              Profile
             </TabsTrigger>
           </TabsList>
 
@@ -539,6 +545,11 @@ export default function UserDashboard() {
           {/* Community Tab */}
           <TabsContent value="community">
             <StockTwits />
+          </TabsContent>
+
+          {/* Profile Tab */}
+          <TabsContent value="profile">
+            {user && <ProfileSettings userId={user.id} />}
           </TabsContent>
         </Tabs>
       </div>
