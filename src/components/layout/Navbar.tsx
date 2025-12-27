@@ -15,7 +15,8 @@ import {
   Brain,
   MessageSquare,
   BarChart3,
-  Heart
+  Heart,
+  Briefcase
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -125,6 +126,10 @@ export function Navbar() {
                     </DropdownMenuItem>
                     {role === 'investor' && (
                       <>
+                        <DropdownMenuItem onClick={() => navigate('/portfolio')}>
+                          <Briefcase className="mr-2 h-4 w-4" />
+                          Portfolio
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate('/analytics')}>
                           <BarChart3 className="mr-2 h-4 w-4" />
                           Analytics
@@ -224,8 +229,16 @@ export function Navbar() {
               {user && role === 'investor' && (
                 <>
                   <Link 
-                    to="/ai-matching" 
+                    to="/portfolio" 
                     className="px-4 py-2 text-sm font-medium text-primary hover:bg-muted rounded-md flex items-center gap-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Briefcase className="h-4 w-4" />
+                    Portfolio
+                  </Link>
+                  <Link 
+                    to="/ai-matching" 
+                    className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-md flex items-center gap-2"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <Brain className="h-4 w-4" />

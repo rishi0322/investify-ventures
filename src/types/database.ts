@@ -51,6 +51,8 @@ export interface Startup {
   founded_year: number | null;
   team_size: number | null;
   location: string | null;
+  valuation: number | null;
+  total_shares: number | null;
   verification_status: VerificationStatus;
   verified_at: string | null;
   verified_by: string | null;
