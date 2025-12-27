@@ -66,7 +66,7 @@ export default function Index() {
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground mb-8 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-              Connect with verified startups, explore their pitches, and build your investment portfolio starting at just ₹500. Join thousands of investors shaping India's startup ecosystem.
+              Capitalize on India's innovation surge. We bridge the gap between visionary startups and strategic investors, allowing you to build a diversified equity portfolio with minimum investments and maximum impact.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-up" style={{ animationDelay: '0.3s' }}>

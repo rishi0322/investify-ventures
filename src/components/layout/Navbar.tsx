@@ -9,7 +9,12 @@ import {
   Building2,
   ShieldCheck,
   Menu,
-  X
+  X,
+  Wallet,
+  Brain,
+  MessageSquare,
+  BarChart3,
+  Heart
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -68,42 +73,102 @@ export function Navbar() {
             >
               How It Works
             </Link>
+            {user && role === 'investor' && (
+              <Link 
+                to="/ai-matching" 
+                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
+              >
+                <Brain className="h-4 w-4" />
+                AI Match
+              </Link>
+            )}
           </div>
 
           {/* Auth Actions */}
           <div className="hidden md:flex items-center gap-3">
             {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <User className="h-4 w-4" />
-                    <span className="max-w-[100px] truncate">{user.email}</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem onClick={() => navigate(getDashboardLink())}>
-                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                    Dashboard
-                  </DropdownMenuItem>
-                  {role === 'startup' && (
-                    <DropdownMenuItem onClick={() => navigate('/startup/profile')}>
-                      <Building2 className="mr-2 h-4 w-4" />
-                      My Startup
+              <>
+                {role === 'investor' && (
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" asChild>
+                      <Link to="/watchlist">
+                        <Heart className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                    <Button variant="ghost" size="icon" asChild>
+                      <Link to="/messages">
+                        <MessageSquare className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                    <Button variant="ghost" size="icon" asChild>
+                      <Link to="/wallet">
+                        <Wallet className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <User className="h-4 w-4" />
+                      <span className="max-w-[100px] truncate">{user.email}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem onClick={() => navigate(getDashboardLink())}>
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Dashboard
                     </DropdownMenuItem>
-                  )}
-                  {role === 'admin' && (
-                    <DropdownMenuItem onClick={() => navigate('/admin')}>
-                      <ShieldCheck className="mr-2 h-4 w-4" />
-                      Admin Panel
+                    {role === 'investor' && (
+                      <>
+                        <DropdownMenuItem onClick={() => navigate('/analytics')}>
+                          <BarChart3 className="mr-2 h-4 w-4" />
+                          Analytics
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate('/wallet')}>
+                          <Wallet className="mr-2 h-4 w-4" />
+                          Crypto Wallet
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate('/watchlist')}>
+                          <Heart className="mr-2 h-4 w-4" />
+                          Watchlist
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate('/messages')}>
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          Messages
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate('/ai-matching')}>
+                          <Brain className="mr-2 h-4 w-4" />
+                          AI Matching
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    {role === 'startup' && (
+                      <>
+                        <DropdownMenuItem onClick={() => navigate('/startup/dashboard')}>
+                          <Building2 className="mr-2 h-4 w-4" />
+                          My Startup
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate('/messages')}>
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          Messages
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    {role === 'admin' && (
+                      <DropdownMenuItem onClick={() => navigate('/admin')}>
+                        <ShieldCheck className="mr-2 h-4 w-4" />
+                        Admin Panel
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign Out
                     </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
             ) : (
               <>
                 <Button variant="ghost" size="sm" asChild>
@@ -152,6 +217,42 @@ export function Navbar() {
               >
                 How It Works
               </Link>
+              {user && role === 'investor' && (
+                <>
+                  <Link 
+                    to="/ai-matching" 
+                    className="px-4 py-2 text-sm font-medium text-primary hover:bg-muted rounded-md flex items-center gap-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Brain className="h-4 w-4" />
+                    AI Matching
+                  </Link>
+                  <Link 
+                    to="/wallet" 
+                    className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-md flex items-center gap-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Wallet className="h-4 w-4" />
+                    Crypto Wallet
+                  </Link>
+                  <Link 
+                    to="/analytics" 
+                    className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-md flex items-center gap-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <BarChart3 className="h-4 w-4" />
+                    Analytics
+                  </Link>
+                  <Link 
+                    to="/watchlist" 
+                    className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-md flex items-center gap-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Heart className="h-4 w-4" />
+                    Watchlist
+                  </Link>
+                </>
+              )}
               <div className="border-t border-border my-2" />
               {user ? (
                 <>
@@ -161,6 +262,14 @@ export function Navbar() {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Dashboard
+                  </Link>
+                  <Link 
+                    to="/messages" 
+                    className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-md flex items-center gap-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Messages
                   </Link>
                   <button 
                     onClick={() => { handleSignOut(); setMobileMenuOpen(false); }}
