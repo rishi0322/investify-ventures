@@ -11,8 +11,7 @@ import Startups from "./pages/Startups";
 import StartupDetail from "./pages/StartupDetail";
 import Sectors from "./pages/Sectors";
 import HowItWorks from "./pages/HowItWorks";
-import InvestorDashboard from "./pages/InvestorDashboard";
-import StartupDashboard from "./pages/StartupDashboard";
+import UserDashboard from "./pages/UserDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Wallet from "./pages/Wallet";
 import AIMatching from "./pages/AIMatching";
@@ -39,8 +38,7 @@ const App = () => (
               <Route path="/startups/:id" element={<StartupDetail />} />
               <Route path="/sectors" element={<Sectors />} />
               <Route path="/how-it-works" element={<HowItWorks />} />
-              <Route path="/investor/dashboard" element={<InvestorDashboard />} />
-              <Route path="/startup/dashboard" element={<StartupDashboard />} />
+              <Route path="/dashboard" element={<UserDashboard />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/wallet" element={<Wallet />} />
               <Route path="/ai-matching" element={<AIMatching />} />

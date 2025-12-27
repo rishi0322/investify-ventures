@@ -39,8 +39,7 @@ export function Navbar() {
 
   const getDashboardLink = () => {
     if (role === 'admin') return '/admin';
-    if (role === 'startup') return '/startup/dashboard';
-    return '/investor/dashboard';
+    return '/dashboard';
   };
 
   return (
@@ -75,22 +74,24 @@ export function Navbar() {
             >
               How It Works
             </Link>
-            {user && role === 'investor' && (
+            {user && (
               <>
                 <Link 
-                  to="/investor/dashboard" 
+                  to="/dashboard" 
                   className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
                 >
                   <LayoutDashboard className="h-4 w-4" />
                   Dashboard
                 </Link>
-                <Link 
-                  to="/ai-matching" 
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                >
-                  <Brain className="h-4 w-4" />
-                  AI Match
-                </Link>
+                {(role === 'investor' || !role) && (
+                  <Link 
+                    to="/ai-matching" 
+                    className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                  >
+                    <Brain className="h-4 w-4" />
+                    AI Match
+                  </Link>
+                )}
               </>
             )}
           </div>
@@ -102,25 +103,23 @@ export function Navbar() {
                 {/* Notification Bell */}
                 <NotificationBell />
 
-                {role === 'investor' && (
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" asChild>
-                      <Link to="/watchlist">
-                        <Heart className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                    <Button variant="ghost" size="icon" asChild>
-                      <Link to="/messages">
-                        <MessageSquare className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                    <Button variant="ghost" size="icon" asChild>
-                      <Link to="/wallet">
-                        <Wallet className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </div>
-                )}
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link to="/watchlist">
+                      <Heart className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link to="/messages">
+                      <MessageSquare className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link to="/wallet">
+                      <Wallet className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-2">
@@ -133,46 +132,30 @@ export function Navbar() {
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       Dashboard
                     </DropdownMenuItem>
-                    {role === 'investor' && (
-                      <>
-                        <DropdownMenuItem onClick={() => navigate('/portfolio')}>
-                          <Briefcase className="mr-2 h-4 w-4" />
-                          Portfolio
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate('/analytics')}>
-                          <BarChart3 className="mr-2 h-4 w-4" />
-                          Analytics
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate('/wallet')}>
-                          <Wallet className="mr-2 h-4 w-4" />
-                          Crypto Wallet
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate('/watchlist')}>
-                          <Heart className="mr-2 h-4 w-4" />
-                          Watchlist
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate('/messages')}>
-                          <MessageSquare className="mr-2 h-4 w-4" />
-                          Messages
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate('/ai-matching')}>
-                          <Brain className="mr-2 h-4 w-4" />
-                          AI Matching
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                    {role === 'startup' && (
-                      <>
-                        <DropdownMenuItem onClick={() => navigate('/startup/dashboard')}>
-                          <Building2 className="mr-2 h-4 w-4" />
-                          My Startup
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate('/messages')}>
-                          <MessageSquare className="mr-2 h-4 w-4" />
-                          Messages
-                        </DropdownMenuItem>
-                      </>
-                    )}
+                    <DropdownMenuItem onClick={() => navigate('/portfolio')}>
+                      <Briefcase className="mr-2 h-4 w-4" />
+                      Portfolio
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/analytics')}>
+                      <BarChart3 className="mr-2 h-4 w-4" />
+                      Analytics
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/wallet')}>
+                      <Wallet className="mr-2 h-4 w-4" />
+                      Crypto Wallet
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/watchlist')}>
+                      <Heart className="mr-2 h-4 w-4" />
+                      Watchlist
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/messages')}>
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      Messages
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/ai-matching')}>
+                      <Brain className="mr-2 h-4 w-4" />
+                      AI Matching
+                    </DropdownMenuItem>
                     {role === 'admin' && (
                       <DropdownMenuItem onClick={() => navigate('/admin')}>
                         <ShieldCheck className="mr-2 h-4 w-4" />
@@ -235,7 +218,7 @@ export function Navbar() {
               >
                 How It Works
               </Link>
-              {user && role === 'investor' && (
+              {user && (
                 <>
                   <Link 
                     to="/portfolio" 
