@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Investment, Startup, SECTOR_LABELS, SECTOR_ICONS } from '@/types/database';
@@ -13,6 +16,7 @@ import { StockTwits } from '@/components/dashboard/StockTwits';
 import { InvestmentSummary } from '@/components/dashboard/InvestmentSummary';
 import { WalletWidget } from '@/components/dashboard/WalletWidget';
 import { AIRecommendationsPanel } from '@/components/portfolio/AIRecommendationsPanel';
+import { sampleInvestments, sampleWatchlist } from '@/data/sampleInvestments';
 import { 
   TrendingUp, 
   Wallet, 
@@ -24,7 +28,8 @@ import {
   MessageCircle,
   BarChart2,
   Sparkles,
-  Youtube
+  Youtube,
+  FlaskConical
 } from 'lucide-react';
 
 export default function InvestorDashboard() {
@@ -34,6 +39,7 @@ export default function InvestorDashboard() {
   const [watchlist, setWatchlist] = useState<{ startup: Startup }[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [demoMode, setDemoMode] = useState(false);
 
   useEffect(() => {
     if (!authLoading && (!user || role !== 'investor')) {
@@ -72,8 +78,12 @@ export default function InvestorDashboard() {
     setLoading(false);
   };
 
-  const totalInvested = investments.reduce((sum, inv) => sum + inv.amount, 0);
-  const uniqueStartups = new Set(investments.map(inv => inv.startup_id)).size;
+  // Use demo data or real data based on demoMode toggle
+  const displayInvestments = demoMode ? sampleInvestments : investments;
+  const displayWatchlist = demoMode ? sampleWatchlist : watchlist;
+
+  const totalInvested = displayInvestments.reduce((sum, inv) => sum + inv.amount, 0);
+  const uniqueStartups = new Set(displayInvestments.map(inv => inv.startup_id)).size;
 
   if (authLoading || loading) {
     return (
@@ -92,17 +102,37 @@ export default function InvestorDashboard() {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-display font-bold">Investor Dashboard</h1>
+            <h1 className="text-3xl font-display font-bold flex items-center gap-2">
+              Investor Dashboard
+              {demoMode && (
+                <Badge variant="secondary" className="bg-warning/10 text-warning">
+                  <FlaskConical className="h-3 w-3 mr-1" />
+                  Demo Mode
+                </Badge>
+              )}
+            </h1>
             <p className="text-muted-foreground">Track investments, discover startups & manage your portfolio</p>
           </div>
-          <Button asChild>
-            <Link to="/startups">
-              Start Investing
-              <ArrowUpRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Switch 
+                id="demo-mode" 
+                checked={demoMode} 
+                onCheckedChange={setDemoMode}
+              />
+              <Label htmlFor="demo-mode" className="text-sm cursor-pointer">
+                Demo Data
+              </Label>
+            </div>
+            <Button asChild>
+              <Link to="/startups">
+                Start Investing
+                <ArrowUpRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {/* Stats Overview */}
@@ -143,7 +173,7 @@ export default function InvestorDashboard() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Watchlist</p>
-                  <p className="text-xl font-bold">{watchlist.length}</p>
+                  <p className="text-xl font-bold">{displayWatchlist.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -157,7 +187,7 @@ export default function InvestorDashboard() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Total Investments</p>
-                  <p className="text-xl font-bold">{investments.length}</p>
+                  <p className="text-xl font-bold">{displayInvestments.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -191,10 +221,10 @@ export default function InvestorDashboard() {
 
           {/* Portfolio Tab */}
           <TabsContent value="overview">
-            <InvestmentSummary investments={investments} />
+            <InvestmentSummary investments={displayInvestments} />
             
             {/* Watchlist */}
-            {watchlist.length > 0 && (
+            {displayWatchlist.length > 0 && (
               <Card className="mt-6">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -204,7 +234,7 @@ export default function InvestorDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {watchlist.slice(0, 6).map((item) => (
+                    {displayWatchlist.slice(0, 6).map((item) => (
                       <Link
                         key={item.startup.id}
                         to={`/startups/${item.startup.id}`}
@@ -227,10 +257,10 @@ export default function InvestorDashboard() {
                       </Link>
                     ))}
                   </div>
-                  {watchlist.length > 6 && (
+                  {displayWatchlist.length > 6 && (
                     <div className="mt-4 text-center">
                       <Button variant="outline" asChild>
-                        <Link to="/watchlist">View All ({watchlist.length})</Link>
+                        <Link to="/watchlist">View All ({displayWatchlist.length})</Link>
                       </Button>
                     </div>
                   )}
@@ -272,7 +302,7 @@ export default function InvestorDashboard() {
           <TabsContent value="ai">
             <div className="grid lg:grid-cols-2 gap-6">
               {user && (
-                <AIRecommendationsPanel userId={user.id} investments={investments} />
+                <AIRecommendationsPanel userId={user.id} investments={displayInvestments} />
               )}
               <Card>
                 <CardHeader>
@@ -283,7 +313,7 @@ export default function InvestorDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {investments.filter(inv => inv.startup?.pitch_video_url).slice(0, 3).map((inv) => (
+                    {displayInvestments.filter(inv => inv.startup?.pitch_video_url).slice(0, 3).map((inv) => (
                       <Link
                         key={inv.id}
                         to={`/startups/${inv.startup_id}`}
@@ -298,7 +328,7 @@ export default function InvestorDashboard() {
                         </div>
                       </Link>
                     ))}
-                    {investments.filter(inv => inv.startup?.pitch_video_url).length === 0 && (
+                    {displayInvestments.filter(inv => inv.startup?.pitch_video_url).length === 0 && (
                       <p className="text-center text-muted-foreground py-8">No pitch videos available yet</p>
                     )}
                   </div>
