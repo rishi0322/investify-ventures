@@ -14,6 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Startup, SECTOR_LABELS, FUNDING_STAGE_LABELS, SECTOR_ICONS } from '@/types/database';
+import { InvestmentSummary } from '@/components/investment/EquityDisplay';
+import { ProfitCalculator } from '@/components/investment/ProfitCalculator';
 import { 
   ArrowLeft, 
   TrendingUp, 
@@ -29,7 +31,8 @@ import {
   CheckCircle2,
   Share2,
   MessageSquare,
-  Send
+  Send,
+  PieChart
 } from 'lucide-react';
 
 export default function StartupDetail() {
