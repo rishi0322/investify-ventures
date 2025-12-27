@@ -163,12 +163,12 @@ export default function Watchlist() {
 
                     <div className="flex gap-2">
                       <Button variant="outline" className="flex-1" asChild>
-                        <Link to={`/startup/${startup.id}`}>
+                        <Link to={`/startups/${startup.id}`}>
                           View Details
                         </Link>
                       </Button>
                       <Button className="flex-1" asChild>
-                        <Link to={`/startup/${startup.id}`}>
+                        <Link to={`/startups/${startup.id}`}>
                           <TrendingUp className="h-4 w-4 mr-1" />
                           Invest
                         </Link>

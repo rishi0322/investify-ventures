@@ -312,13 +312,13 @@ export default function AIMatching() {
                         
                         <div className="flex gap-2">
                           <Button variant="outline" size="sm" asChild className="flex-1">
-                            <Link to={`/startup/${startup.id}`}>
+                            <Link to={`/startups/${startup.id}`}>
                               View Details
                               <ArrowRight className="h-4 w-4 ml-1" />
                             </Link>
                           </Button>
                           <Button size="sm" asChild className="flex-1">
-                            <Link to={`/startup/${startup.id}`}>
+                            <Link to={`/startups/${startup.id}`}>
                               <TrendingUp className="h-4 w-4 mr-1" />
                               Invest
                             </Link>

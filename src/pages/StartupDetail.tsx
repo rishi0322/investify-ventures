@@ -32,7 +32,8 @@ import {
   Share2,
   MessageSquare,
   Send,
-  PieChart
+  PieChart,
+  Wallet
 } from 'lucide-react';
 
 export default function StartupDetail() {
@@ -50,15 +51,39 @@ export default function StartupDetail() {
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
+  
+  // Wallet integration
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [tpinRequired, setTpinRequired] = useState(false);
+  const [tpinInput, setTpinInput] = useState('');
+  const [walletTpin, setWalletTpin] = useState<string | null>(null);
+  const [tpinSet, setTpinSet] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchStartup();
       if (user) {
         checkWatchlist();
+        fetchWallet();
       }
     }
   }, [id, user]);
+
+  const fetchWallet = async () => {
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from('user_wallets')
+      .select('balance, tpin, tpin_set')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    
+    if (data) {
+      setWalletBalance(data.balance || 0);
+      setWalletTpin(data.tpin);
+      setTpinSet(data.tpin_set || false);
+    }
+  };
 
   const fetchStartup = async () => {
     const { data, error } = await supabase
@@ -181,43 +206,83 @@ export default function StartupDetail() {
       return;
     }
 
+    // Check wallet balance
+    if (walletBalance < amount) {
+      toast({
+        variant: 'destructive',
+        title: 'Insufficient balance',
+        description: `Your wallet balance is ₹${walletBalance.toLocaleString('en-IN')}. Please add funds.`,
+      });
+      return;
+    }
+
+    // Check if TPIN is set and required
+    if (tpinSet && !tpinRequired) {
+      setTpinRequired(true);
+      return;
+    }
+
+    // Verify TPIN if required
+    if (tpinSet && tpinRequired) {
+      if (tpinInput !== walletTpin) {
+        toast({
+          variant: 'destructive',
+          title: 'Invalid TPIN',
+          description: 'Please enter the correct transaction PIN.',
+        });
+        return;
+      }
+    }
+
     setInvesting(true);
 
     // Calculate equity details
     const valuation = getValuation();
-    const totalShares = 1000000;
+    const totalShares = startup.total_shares || 1000000;
     const sharesAcquired = Math.floor((amount / valuation) * totalShares);
     const equityPercentage = (amount / valuation) * 100;
     const pricePerShare = valuation / totalShares;
 
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      // Deduct from wallet
+      const { error: walletError } = await supabase
+        .from('user_wallets')
+        .update({ balance: walletBalance - amount })
+        .eq('user_id', user.id);
 
-    const { error } = await supabase
-      .from('investments')
-      .insert({
-        investor_id: user.id,
-        startup_id: id,
-        amount,
-        shares_acquired: sharesAcquired,
-        equity_percentage: equityPercentage,
-        purchase_price_per_share: pricePerShare,
+      if (walletError) throw walletError;
+
+      // Create investment record
+      const { error: investError } = await supabase
+        .from('investments')
+        .insert({
+          investor_id: user.id,
+          startup_id: id,
+          amount,
+          shares_acquired: sharesAcquired,
+          equity_percentage: equityPercentage,
+          purchase_price_per_share: pricePerShare,
+        });
+
+      if (investError) throw investError;
+
+      toast({
+        title: '🎉 Investment successful!',
+        description: `₹${amount.toLocaleString('en-IN')} deducted from wallet. You now own ${sharesAcquired.toLocaleString('en-IN')} shares (${equityPercentage.toFixed(4)}%) of ${startup?.name}`,
       });
-
-    if (error) {
+      
+      setInvestDialogOpen(false);
+      setInvestAmount('');
+      setTpinRequired(false);
+      setTpinInput('');
+      fetchStartup();
+      fetchWallet();
+    } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Investment failed',
         description: error.message,
       });
-    } else {
-      toast({
-        title: '🎉 Investment successful!',
-        description: `You now own ${sharesAcquired.toLocaleString('en-IN')} shares (${equityPercentage.toFixed(4)}%) of ${startup?.name}`,
-      });
-      setInvestDialogOpen(false);
-      setInvestAmount('');
-      fetchStartup();
     }
     
     setInvesting(false);
@@ -458,6 +523,21 @@ export default function StartupDetail() {
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
+                        {/* Wallet Balance */}
+                        <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Wallet Balance</span>
+                            <span className="text-lg font-bold text-primary">
+                              ₹{walletBalance.toLocaleString('en-IN')}
+                            </span>
+                          </div>
+                          {walletBalance === 0 && (
+                            <p className="text-xs text-destructive mt-2">
+                              Your wallet is empty. <Link to="/wallet" className="underline">Add funds</Link> to invest.
+                            </p>
+                          )}
+                        </div>
+
                         <div className="space-y-2">
                           <Label htmlFor="amount">Investment Amount (₹)</Label>
                           <Input
@@ -465,12 +545,22 @@ export default function StartupDetail() {
                             type="number"
                             placeholder={startup.min_investment.toString()}
                             value={investAmount}
-                            onChange={(e) => setInvestAmount(e.target.value)}
+                            onChange={(e) => {
+                              setInvestAmount(e.target.value);
+                              setTpinRequired(false);
+                              setTpinInput('');
+                            }}
                             min={startup.min_investment}
+                            disabled={tpinRequired}
                           />
+                          {investAmount && parseInt(investAmount) > walletBalance && (
+                            <p className="text-xs text-destructive">
+                              Insufficient balance. You need ₹{(parseInt(investAmount) - walletBalance).toLocaleString('en-IN')} more.
+                            </p>
+                          )}
                         </div>
                         
-                        {investAmount && parseInt(investAmount) >= startup.min_investment && (
+                        {investAmount && parseInt(investAmount) >= startup.min_investment && parseInt(investAmount) <= walletBalance && (
                           <InvestmentSummary 
                             amount={parseInt(investAmount)} 
                             valuation={getValuation()} 
@@ -478,24 +568,55 @@ export default function StartupDetail() {
                           />
                         )}
 
+                        {/* TPIN Input */}
+                        {tpinRequired && tpinSet && (
+                          <div className="space-y-2 p-4 rounded-lg bg-accent/10 border border-accent/20">
+                            <Label htmlFor="tpin" className="text-accent">Enter Transaction PIN (TPIN)</Label>
+                            <Input
+                              id="tpin"
+                              type="password"
+                              placeholder="••••••"
+                              value={tpinInput}
+                              onChange={(e) => setTpinInput(e.target.value)}
+                              maxLength={6}
+                              className="text-center text-xl tracking-widest"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Enter your 6-digit transaction PIN to confirm this investment.
+                            </p>
+                          </div>
+                        )}
+
                         <p className="text-xs text-muted-foreground">
-                          This is a simulated investment for demo purposes. No actual payment will be processed.
+                          Amount will be deducted from your wallet balance.
                         </p>
                       </div>
                       <DialogFooter>
-                        <Button variant="outline" onClick={() => setInvestDialogOpen(false)}>
+                        <Button variant="outline" onClick={() => {
+                          setInvestDialogOpen(false);
+                          setTpinRequired(false);
+                          setTpinInput('');
+                        }}>
                           Cancel
                         </Button>
-                        <Button onClick={handleInvest} disabled={investing}>
+                        <Button 
+                          onClick={handleInvest} 
+                          disabled={investing || walletBalance < parseInt(investAmount || '0')}
+                        >
                           {investing ? (
                             <>
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Processing Payment...
+                              Processing...
+                            </>
+                          ) : tpinRequired ? (
+                            <>
+                              <PieChart className="mr-2 h-4 w-4" />
+                              Confirm with TPIN
                             </>
                           ) : (
                             <>
                               <PieChart className="mr-2 h-4 w-4" />
-                              Confirm Investment
+                              {tpinSet ? 'Enter TPIN' : 'Confirm Investment'}
                             </>
                           )}
                         </Button>
