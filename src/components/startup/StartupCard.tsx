@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Startup, SECTOR_LABELS, FUNDING_STAGE_LABELS, SECTOR_ICONS } from '@/types/database';
-import { TrendingUp, Users, MapPin, ArrowRight } from 'lucide-react';
+import { TrendingUp, Users, MapPin, ArrowRight, AlertTriangle } from 'lucide-react';
 
 interface StartupCardProps {
   startup: Startup;
@@ -12,6 +12,14 @@ interface StartupCardProps {
 
 export function StartupCard({ startup }: StartupCardProps) {
   const progress = (startup.amount_raised / startup.funding_goal) * 100;
+
+  // Quick risk score
+  const stageRisk: Record<string, number> = { pre_seed: 85, seed: 70, series_a: 50, series_b: 35, series_c: 20 };
+  const fundingPct = progress;
+  const fundingRisk = fundingPct > 80 ? 20 : fundingPct > 50 ? 40 : fundingPct > 20 ? 60 : 80;
+  const riskScore = Math.round(((stageRisk[startup.funding_stage] ?? 60) + fundingRisk) / 2);
+  const riskLabel = riskScore <= 30 ? 'Low Risk' : riskScore <= 60 ? 'Medium Risk' : 'High Risk';
+  const riskVariant: 'default' | 'secondary' | 'destructive' = riskScore <= 30 ? 'default' : riskScore <= 60 ? 'secondary' : 'destructive';
   const formattedGoal = new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
@@ -52,6 +60,10 @@ export function StartupCard({ startup }: StartupCardProps) {
           </Badge>
           <Badge variant="outline" className="text-xs">
             {FUNDING_STAGE_LABELS[startup.funding_stage]}
+          </Badge>
+          <Badge variant={riskVariant} className="text-xs">
+            <AlertTriangle className="h-3 w-3 mr-1" />
+            {riskLabel}
           </Badge>
         </div>
 
