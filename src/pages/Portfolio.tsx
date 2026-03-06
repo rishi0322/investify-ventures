@@ -249,6 +249,10 @@ export default function Portfolio() {
                         key={investment.id} 
                         investment={investment}
                         simulatedChange={simulatedChanges[investment.id]}
+                        onTrade={(inv) => {
+                          setTradeTarget(inv);
+                          setTradeDialogOpen(true);
+                        }}
                       />
                     ))}
                   </div>
@@ -268,6 +272,24 @@ export default function Portfolio() {
           </div>
         </div>
       </div>
+
+      {/* Trade Dialog */}
+      <TradeDialog
+        open={tradeDialogOpen}
+        onOpenChange={setTradeDialogOpen}
+        investment={tradeTarget}
+        simulatedChange={tradeTarget ? (simulatedChanges[tradeTarget.id] || 0) : 0}
+        onTradeComplete={(investmentId, action, amount, pnl) => {
+          setTradeHistory(prev => [...prev, {
+            id: investmentId,
+            action,
+            amount,
+            pnl,
+            time: new Date(),
+            startup: tradeTarget?.startup?.name || '',
+          }]);
+        }}
+      />
     </Layout>
   );
 }
