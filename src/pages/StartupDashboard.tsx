@@ -58,6 +58,10 @@ export default function StartupDashboard() {
         .order('created_at', { ascending: false });
 
       if (invData) setInvestments(invData);
+    } else {
+      // Use demo data when no real startup exists
+      setStartup(sampleStartup);
+      setInvestments(sampleStartupInvestments);
     }
     setLoading(false);
   };
