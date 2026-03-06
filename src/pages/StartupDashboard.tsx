@@ -86,7 +86,6 @@ export default function StartupDashboard() {
   }
 
   if (!startup) {
-    navigate('/register-startup');
     return null;
   }
 
