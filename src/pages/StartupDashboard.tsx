@@ -14,9 +14,10 @@ import { StartupVerificationStatus } from '@/components/startup-dashboard/Startu
 import { StartupGrowthChart } from '@/components/startup-dashboard/StartupGrowthChart';
 import { StartupInvestorsList } from '@/components/startup-dashboard/StartupInvestorsList';
 import { ProfileSettings } from '@/components/profile/ProfileSettings';
+import { StartupAIMatchmaking } from '@/components/startup-dashboard/StartupAIMatchmaking';
 import {
   Building2, TrendingUp, Users, Shield, Edit, BarChart2,
-  DollarSign, PieChart, UserCircle, Percent
+  DollarSign, PieChart, UserCircle, Percent, Brain
 } from 'lucide-react';
 
 export default function StartupDashboard() {
@@ -171,10 +172,14 @@ export default function StartupDashboard() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-5 w-full max-w-3xl bg-muted/50 p-1 rounded-xl">
+          <TabsList className="grid grid-cols-6 w-full max-w-4xl bg-muted/50 p-1 rounded-xl">
             <TabsTrigger value="overview" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <BarChart2 className="h-4 w-4 mr-2" />
               Overview
+            </TabsTrigger>
+            <TabsTrigger value="matchmaking" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <Brain className="h-4 w-4 mr-2" />
+              AI Matchmaking
             </TabsTrigger>
             <TabsTrigger value="investors" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <Users className="h-4 w-4 mr-2" />
@@ -196,6 +201,10 @@ export default function StartupDashboard() {
 
           <TabsContent value="overview">
             <StartupGrowthChart startup={startup} investments={investments} />
+          </TabsContent>
+
+          <TabsContent value="matchmaking">
+            <StartupAIMatchmaking startup={startup} founderId={user!.id} />
           </TabsContent>
 
           <TabsContent value="investors">
