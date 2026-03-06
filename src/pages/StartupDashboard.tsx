@@ -77,16 +77,8 @@ export default function StartupDashboard() {
   }
 
   if (!startup) {
-    return (
-      <Layout>
-        <div className="container mx-auto px-4 py-16 text-center">
-          <Building2 className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-          <h1 className="text-2xl font-display font-bold mb-2">No Startup Found</h1>
-          <p className="text-muted-foreground mb-6">You haven't registered a startup yet.</p>
-          <Badge variant="secondary">Feature coming soon: Register your startup</Badge>
-        </div>
-      </Layout>
-    );
+    navigate('/register-startup');
+    return null;
   }
 
   return (
