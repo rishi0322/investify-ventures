@@ -20,6 +20,7 @@ import Analytics from "./pages/Analytics";
 import Watchlist from "./pages/Watchlist";
 import Portfolio from "./pages/Portfolio";
 import StartupDashboard from "./pages/StartupDashboard";
+import RegisterStartup from "./pages/RegisterStartup";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
