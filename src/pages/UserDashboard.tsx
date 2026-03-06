@@ -18,6 +18,7 @@ import { InvestmentSummary } from '@/components/dashboard/InvestmentSummary';
 import { WalletWidget } from '@/components/dashboard/WalletWidget';
 import { AIRecommendationsPanel } from '@/components/portfolio/AIRecommendationsPanel';
 import { ProfileSettings } from '@/components/profile/ProfileSettings';
+import { TradeHistory } from '@/components/investor-dashboard/TradeHistory';
 import { sampleInvestments, sampleWatchlist } from '@/data/sampleInvestments';
 import { 
   TrendingUp, 
