@@ -137,6 +137,7 @@ export function PortfolioCard({ investment, simulatedChange, onTrade }: Portfoli
               </Button>
             </div>
           )}
+        </div>
       </CardContent>
     </Card>
   );
