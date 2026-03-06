@@ -111,10 +111,11 @@ export default function AIMatching() {
       });
     } catch (error: any) {
       console.error('AI matching error:', error);
+      const errorMsg = error?.message || 'Analysis failed';
       toast({ 
         variant: 'destructive', 
-        title: 'Analysis failed', 
-        description: error.message 
+        title: errorMsg.includes('Rate limit') ? 'Too Many Requests' : errorMsg.includes('Payment') ? 'Usage Limit Reached' : 'Analysis failed',
+        description: errorMsg
       });
     } finally {
       setAnalyzing(false);
