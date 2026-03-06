@@ -56,24 +56,32 @@ export function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
-            <Link 
-              to="/startups" 
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Browse Startups
-            </Link>
-            <Link 
-              to="/sectors" 
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Sectors
-            </Link>
-            <Link 
-              to="/how-it-works" 
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              How It Works
-            </Link>
+            {/* Show Browse Startups & Sectors only if not logged in or not a startup role */}
+            {(!user || role !== 'startup') && (
+              <>
+                <Link 
+                  to="/startups" 
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Browse Startups
+                </Link>
+                <Link 
+                  to="/sectors" 
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Sectors
+                </Link>
+              </>
+            )}
+            {/* Show How It Works only when not logged in */}
+            {!user && (
+              <Link 
+                to="/how-it-works" 
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                How It Works
+              </Link>
+            )}
             {user && (
               <>
                 <Link 
@@ -197,27 +205,33 @@ export function Navbar() {
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-border animate-fade-in">
             <div className="flex flex-col gap-3">
-              <Link 
-                to="/startups" 
-                className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-md"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Browse Startups
-              </Link>
-              <Link 
-                to="/sectors" 
-                className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-md"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Sectors
-              </Link>
-              <Link 
-                to="/how-it-works" 
-                className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-md"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                How It Works
-              </Link>
+              {(!user || role !== 'startup') && (
+                <>
+                  <Link 
+                    to="/startups" 
+                    className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-md"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Browse Startups
+                  </Link>
+                  <Link 
+                    to="/sectors" 
+                    className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-md"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Sectors
+                  </Link>
+                </>
+              )}
+              {!user && (
+                <Link 
+                  to="/how-it-works" 
+                  className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  How It Works
+                </Link>
+              )}
               {user && (
                 <>
                   <Link 
