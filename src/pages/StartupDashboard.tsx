@@ -18,6 +18,7 @@ import { StartupAIInsights } from '@/components/startup-dashboard/StartupAIInsig
 import { StartupMilestones } from '@/components/startup-dashboard/StartupMilestones';
 import { StartupFundingReport } from '@/components/startup-dashboard/StartupFundingReport';
 import { ProfileSettings } from '@/components/profile/ProfileSettings';
+import { sampleStartup, sampleStartupInvestments } from '@/data/sampleStartupDashboard';
 import {
   TrendingUp, Users, Shield, Edit, BarChart2,
   DollarSign, UserCircle, Percent, Brain, Eye, Sparkles, Trophy, FileBarChart
@@ -57,6 +58,10 @@ export default function StartupDashboard() {
         .order('created_at', { ascending: false });
 
       if (invData) setInvestments(invData);
+    } else {
+      // Use demo data when no real startup exists
+      setStartup(sampleStartup);
+      setInvestments(sampleStartupInvestments);
     }
     setLoading(false);
   };
@@ -81,7 +86,6 @@ export default function StartupDashboard() {
   }
 
   if (!startup) {
-    navigate('/register-startup');
     return null;
   }
 
