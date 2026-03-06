@@ -478,6 +478,11 @@ export default function UserDashboard() {
             <InvestmentSummary investments={displayInvestments} />
           </TabsContent>
 
+          {/* Trade History Tab */}
+          <TabsContent value="history">
+            <TradeHistory />
+          </TabsContent>
+
           {/* Wallet Tab */}
           <TabsContent value="wallet">
             <div className="grid lg:grid-cols-3 gap-6">
