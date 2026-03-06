@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Startup, SECTOR_LABELS, FUNDING_STAGE_LABELS, SECTOR_ICONS } from '@/types/database';
 import { InvestmentSummary } from '@/components/investment/EquityDisplay';
+import { RiskAnalysis } from '@/components/startup/RiskAnalysis';
 import { ProfitCalculator } from '@/components/investment/ProfitCalculator';
 import { verifyTpin } from '@/components/wallet/WalletPinSetup';
 import { 
@@ -710,6 +711,9 @@ export default function StartupDetail() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Risk Analysis */}
+            <RiskAnalysis startup={startup} />
           </div>
         </div>
       </div>
