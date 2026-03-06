@@ -2,16 +2,18 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { TrendingUp, TrendingDown, Minus, ExternalLink, PieChart, Coins } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, ExternalLink, PieChart, Coins, ArrowRightLeft } from 'lucide-react';
 import { Investment, Startup, SECTOR_LABELS, SECTOR_ICONS } from '@/types/database';
 
 interface PortfolioCardProps {
   investment: Investment & { startup: Startup };
   simulatedChange?: number;
+  onTrade?: (investment: Investment & { startup: Startup }) => void;
 }
 
-export function PortfolioCard({ investment, simulatedChange }: PortfolioCardProps) {
+export function PortfolioCard({ investment, simulatedChange, onTrade }: PortfolioCardProps) {
   const [currentValue, setCurrentValue] = useState(investment.amount);
   const [percentChange, setPercentChange] = useState(simulatedChange || 0);
 
@@ -120,6 +122,21 @@ export function PortfolioCard({ investment, simulatedChange }: PortfolioCardProp
               </p>
             </div>
           </div>
+
+          {/* Trade Button */}
+          {onTrade && (
+            <div className="mt-3 pt-3 border-t border-border/50">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => onTrade(investment)}
+              >
+                <ArrowRightLeft className="h-3.5 w-3.5 mr-1.5" />
+                Trade
+              </Button>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

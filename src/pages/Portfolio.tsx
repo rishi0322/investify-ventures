@@ -12,6 +12,7 @@ import { PortfolioCard } from '@/components/portfolio/PortfolioCard';
 import { PortfolioStats } from '@/components/portfolio/PortfolioStats';
 import { PortfolioCharts } from '@/components/portfolio/PortfolioCharts';
 import { AIRecommendationsPanel } from '@/components/portfolio/AIRecommendationsPanel';
+import { TradeDialog } from '@/components/portfolio/TradeDialog';
 import { 
   ArrowUpRight,
   RefreshCcw,
@@ -29,6 +30,9 @@ export default function Portfolio() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [tradeTarget, setTradeTarget] = useState<(Investment & { startup: Startup }) | null>(null);
+  const [tradeDialogOpen, setTradeDialogOpen] = useState(false);
+  const [tradeHistory, setTradeHistory] = useState<{ id: string; action: string; amount: number; pnl: number; time: Date; startup: string }[]>([]);
 
   // Generate consistent simulated changes for each investment
   const [simulatedChanges, setSimulatedChanges] = useState<Record<string, number>>({});
@@ -45,23 +49,25 @@ export default function Portfolio() {
     }
   }, [user]);
 
-  // Simulate real-time updates every 30 seconds
+  // Live stock-market-like price simulation every 5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       if (investments.length > 0) {
-        const newChanges: Record<string, number> = {};
-        investments.forEach(inv => {
-          const currentChange = simulatedChanges[inv.id] || 0;
-          // Small random walk
-          const delta = (Math.random() - 0.48) * 2; // Slight positive bias
-          newChanges[inv.id] = Math.max(-15, Math.min(25, currentChange + delta));
+        setSimulatedChanges(prev => {
+          const newChanges: Record<string, number> = {};
+          investments.forEach(inv => {
+            const currentChange = prev[inv.id] || 0;
+            // Small random walk with slight positive bias
+            const volatility = (Math.random() - 0.47) * 1.2;
+            newChanges[inv.id] = Math.max(-20, Math.min(30, currentChange + volatility));
+          });
+          return newChanges;
         });
-        setSimulatedChanges(newChanges);
       }
-    }, 30000);
+    }, 5000);
 
     return () => clearInterval(interval);
-  }, [investments, simulatedChanges]);
+  }, [investments]);
 
   const fetchInvestments = async (showRefreshing = false) => {
     if (showRefreshing) setRefreshing(true);
@@ -243,6 +249,10 @@ export default function Portfolio() {
                         key={investment.id} 
                         investment={investment}
                         simulatedChange={simulatedChanges[investment.id]}
+                        onTrade={(inv) => {
+                          setTradeTarget(inv);
+                          setTradeDialogOpen(true);
+                        }}
                       />
                     ))}
                   </div>
@@ -262,6 +272,24 @@ export default function Portfolio() {
           </div>
         </div>
       </div>
+
+      {/* Trade Dialog */}
+      <TradeDialog
+        open={tradeDialogOpen}
+        onOpenChange={setTradeDialogOpen}
+        investment={tradeTarget}
+        simulatedChange={tradeTarget ? (simulatedChanges[tradeTarget.id] || 0) : 0}
+        onTradeComplete={(investmentId, action, amount, pnl) => {
+          setTradeHistory(prev => [...prev, {
+            id: investmentId,
+            action,
+            amount,
+            pnl,
+            time: new Date(),
+            startup: tradeTarget?.startup?.name || '',
+          }]);
+        }}
+      />
     </Layout>
   );
 }
