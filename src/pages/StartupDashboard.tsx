@@ -16,10 +16,11 @@ import { StartupAIMatchmaking } from '@/components/startup-dashboard/StartupAIMa
 import { StartupProfileViews } from '@/components/startup-dashboard/StartupProfileViews';
 import { StartupAIInsights } from '@/components/startup-dashboard/StartupAIInsights';
 import { StartupMilestones } from '@/components/startup-dashboard/StartupMilestones';
+import { StartupFundingReport } from '@/components/startup-dashboard/StartupFundingReport';
 import { ProfileSettings } from '@/components/profile/ProfileSettings';
 import {
   TrendingUp, Users, Shield, Edit, BarChart2,
-  DollarSign, UserCircle, Percent, Brain, Eye, Sparkles, Trophy
+  DollarSign, UserCircle, Percent, Brain, Eye, Sparkles, Trophy, FileBarChart
 } from 'lucide-react';
 
 export default function StartupDashboard() {
@@ -175,7 +176,7 @@ export default function StartupDashboard() {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="overflow-x-auto -mx-4 px-4">
-            <TabsList className="inline-flex w-auto min-w-full lg:grid lg:grid-cols-9 bg-muted/50 p-1 rounded-xl">
+            <TabsList className="inline-flex w-auto min-w-full lg:grid lg:grid-cols-10 bg-muted/50 p-1 rounded-xl">
               <TabsTrigger value="overview" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
                 <BarChart2 className="h-4 w-4 mr-1.5" />
                 Overview
@@ -187,6 +188,10 @@ export default function StartupDashboard() {
               <TabsTrigger value="ai-insights" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
                 <Sparkles className="h-4 w-4 mr-1.5" />
                 AI Insights
+              </TabsTrigger>
+              <TabsTrigger value="funding-report" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
+                <FileBarChart className="h-4 w-4 mr-1.5" />
+                AI Reports
               </TabsTrigger>
               <TabsTrigger value="matchmaking" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
                 <Brain className="h-4 w-4 mr-1.5" />
@@ -225,6 +230,10 @@ export default function StartupDashboard() {
 
           <TabsContent value="ai-insights">
             <StartupAIInsights startup={startup} investments={investments} />
+          </TabsContent>
+
+          <TabsContent value="funding-report">
+            <StartupFundingReport startup={startup} investments={investments} />
           </TabsContent>
 
           <TabsContent value="matchmaking">
