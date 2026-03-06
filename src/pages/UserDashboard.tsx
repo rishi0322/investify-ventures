@@ -18,6 +18,7 @@ import { InvestmentSummary } from '@/components/dashboard/InvestmentSummary';
 import { WalletWidget } from '@/components/dashboard/WalletWidget';
 import { AIRecommendationsPanel } from '@/components/portfolio/AIRecommendationsPanel';
 import { ProfileSettings } from '@/components/profile/ProfileSettings';
+import { TradeHistory } from '@/components/investor-dashboard/TradeHistory';
 import { sampleInvestments, sampleWatchlist } from '@/data/sampleInvestments';
 import { 
   TrendingUp, 
@@ -71,10 +72,9 @@ export default function UserDashboard() {
   });
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-    }
-  }, [user, authLoading, navigate]);
+    if (!authLoading && !user) navigate('/auth');
+    if (!authLoading && role === 'startup') navigate('/startup-dashboard');
+  }, [user, role, authLoading, navigate]);
 
   useEffect(() => {
     if (user) {
@@ -246,7 +246,7 @@ export default function UserDashboard() {
 
         {/* Main Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-7 w-full max-w-4xl bg-muted/50 p-1 rounded-xl">
+          <TabsList className="grid grid-cols-8 w-full max-w-5xl bg-muted/50 p-1 rounded-xl">
             <TabsTrigger value="overview" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <Briefcase className="h-4 w-4 mr-2" />
               Overview
@@ -254,6 +254,10 @@ export default function UserDashboard() {
             <TabsTrigger value="portfolio" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <PieChart className="h-4 w-4 mr-2" />
               Portfolio
+            </TabsTrigger>
+            <TabsTrigger value="history" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <BarChart2 className="h-4 w-4 mr-2" />
+              History
             </TabsTrigger>
             <TabsTrigger value="wallet" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <Wallet className="h-4 w-4 mr-2" />
@@ -264,7 +268,7 @@ export default function UserDashboard() {
               AI Picks
             </TabsTrigger>
             <TabsTrigger value="trends" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <BarChart2 className="h-4 w-4 mr-2" />
+              <LineChart className="h-4 w-4 mr-2" />
               Trends
             </TabsTrigger>
             <TabsTrigger value="community" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
@@ -472,6 +476,11 @@ export default function UserDashboard() {
           {/* Portfolio Tab */}
           <TabsContent value="portfolio">
             <InvestmentSummary investments={displayInvestments} />
+          </TabsContent>
+
+          {/* Trade History Tab */}
+          <TabsContent value="history">
+            <TradeHistory />
           </TabsContent>
 
           {/* Wallet Tab */}

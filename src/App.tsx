@@ -19,6 +19,7 @@ import Messages from "./pages/Messages";
 import Analytics from "./pages/Analytics";
 import Watchlist from "./pages/Watchlist";
 import Portfolio from "./pages/Portfolio";
+import StartupDashboard from "./pages/StartupDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="/sectors" element={<Sectors />} />
               <Route path="/how-it-works" element={<HowItWorks />} />
               <Route path="/dashboard" element={<UserDashboard />} />
+              <Route path="/startup-dashboard" element={<StartupDashboard />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/wallet" element={<Wallet />} />
               <Route path="/ai-matching" element={<AIMatching />} />
