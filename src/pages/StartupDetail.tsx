@@ -482,9 +482,9 @@ export default function StartupDetail() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-6 lg:sticky lg:top-24 lg:self-start">
             {/* Investment Card */}
-            <Card className="sticky top-24">
+            <Card>
               <CardContent className="p-6">
                 <div className="space-y-4">
                   <div>
