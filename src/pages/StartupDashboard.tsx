@@ -18,6 +18,7 @@ import { StartupAIInsights } from '@/components/startup-dashboard/StartupAIInsig
 import { StartupMilestones } from '@/components/startup-dashboard/StartupMilestones';
 import { StartupFundingReport } from '@/components/startup-dashboard/StartupFundingReport';
 import { ProfileSettings } from '@/components/profile/ProfileSettings';
+import { sampleStartup, sampleStartupInvestments } from '@/data/sampleStartupDashboard';
 import {
   TrendingUp, Users, Shield, Edit, BarChart2,
   DollarSign, UserCircle, Percent, Brain, Eye, Sparkles, Trophy, FileBarChart
