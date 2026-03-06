@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 serve(async (req) => {
@@ -18,7 +18,13 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const prompt = `You are an AI investment advisor for a startup investment platform. 
+    if (!startups || startups.length === 0) {
+      return new Response(JSON.stringify({ recommendations: [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const prompt = `You are an AI investment advisor for a startup investment platform.
     
 Analyze the following startups and rank them for an investor with these preferences:
 - Preferred sectors: ${investorPreferences.sectors?.join(', ') || 'Any'}
@@ -28,33 +34,18 @@ Analyze the following startups and rank them for an investor with these preferen
 
 Startups to analyze:
 ${startups.map((s: any, i: number) => `
-${i + 1}. ${s.name}
-   - Sector: ${s.sector}
-   - Stage: ${s.funding_stage}
-   - Tagline: ${s.tagline}
-   - Description: ${s.description}
-   - Funding Goal: ₹${s.funding_goal}
-   - Amount Raised: ₹${s.amount_raised}
-   - Min Investment: ₹${s.min_investment}
+${i + 1}. ID: ${s.id}
+   Name: ${s.name}
+   Sector: ${s.sector}
+   Stage: ${s.funding_stage}
+   Tagline: ${s.tagline}
+   Description: ${s.description}
+   Funding Goal: ₹${s.funding_goal}
+   Amount Raised: ₹${s.amount_raised}
+   Min Investment: ₹${s.min_investment}
 `).join('\n')}
 
-For each startup, provide:
-1. A match score from 0-100
-2. A brief reasoning (2-3 sentences) explaining why this startup matches or doesn't match the investor's profile
-
-Return your response in the following JSON format:
-{
-  "recommendations": [
-    {
-      "startup_id": "startup-uuid",
-      "startup_name": "Name",
-      "match_score": 85,
-      "reasoning": "Brief explanation..."
-    }
-  ]
-}
-
-Sort recommendations by match_score in descending order. Only include startups with match_score > 50.`;
+Rank the startups by match score (0-100) based on how well they align with the investor's preferences. Provide reasoning for each. Only include startups with score > 40. Sort by score descending.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -63,11 +54,42 @@ Sort recommendations by match_score in descending order. Only include startups w
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: "You are an expert AI investment advisor. Always respond with valid JSON." },
+          { role: "system", content: "You are an expert AI investment advisor. Use the provided tool to return structured recommendations." },
           { role: "user", content: prompt }
         ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "return_recommendations",
+              description: "Return ranked startup recommendations for the investor.",
+              parameters: {
+                type: "object",
+                properties: {
+                  recommendations: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        startup_id: { type: "string", description: "The UUID of the startup" },
+                        startup_name: { type: "string", description: "Name of the startup" },
+                        match_score: { type: "number", description: "Match score 0-100" },
+                        reasoning: { type: "string", description: "2-3 sentence explanation of why this startup matches" }
+                      },
+                      required: ["startup_id", "startup_name", "match_score", "reasoning"],
+                      additionalProperties: false
+                    }
+                  }
+                },
+                required: ["recommendations"],
+                additionalProperties: false
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "return_recommendations" } },
         temperature: 0.7,
       }),
     });
@@ -79,26 +101,46 @@ Sort recommendations by match_score in descending order. Only include startups w
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: "Usage limit reached. Please add credits to continue." }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       const t = await response.text();
       console.error("AI gateway error:", response.status, t);
-      return new Response(JSON.stringify({ error: "AI gateway error" }), {
+      return new Response(JSON.stringify({ error: "AI analysis failed. Please try again." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '';
     
-    // Parse JSON from the response
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error("Failed to parse AI response");
+    // Extract from tool call response
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    let recommendations;
+    
+    if (toolCall?.function?.arguments) {
+      const args = typeof toolCall.function.arguments === 'string' 
+        ? JSON.parse(toolCall.function.arguments) 
+        : toolCall.function.arguments;
+      recommendations = args.recommendations || [];
+    } else {
+      // Fallback: try parsing content directly
+      const content = data.choices?.[0]?.message?.content || '';
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        recommendations = JSON.parse(jsonMatch[0]).recommendations || [];
+      } else {
+        recommendations = [];
+      }
     }
-    
-    const recommendations = JSON.parse(jsonMatch[0]);
 
-    return new Response(JSON.stringify(recommendations), {
+    // Sort by match_score descending
+    recommendations.sort((a: any, b: any) => b.match_score - a.match_score);
+
+    return new Response(JSON.stringify({ recommendations }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: unknown) {

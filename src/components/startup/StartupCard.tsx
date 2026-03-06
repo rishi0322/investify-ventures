@@ -32,8 +32,8 @@ export function StartupCard({ startup }: StartupCardProps) {
   }).format(startup.amount_raised);
 
   return (
-    <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 gradient-card border-border/50">
-      <CardContent className="p-6">
+    <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 gradient-card border-border/50 flex flex-col h-full">
+      <CardContent className="p-6 flex-1 flex flex-col">
         {/* Header */}
         <div className="flex items-start gap-4 mb-4">
           <div className="h-14 w-14 rounded-xl bg-muted flex items-center justify-center text-2xl shrink-0">
@@ -81,7 +81,7 @@ export function StartupCard({ startup }: StartupCardProps) {
         </div>
 
         {/* Stats */}
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <div className="flex items-center gap-4 text-sm text-muted-foreground mt-auto pt-2">
           <div className="flex items-center gap-1">
             <TrendingUp className="h-4 w-4" />
             <span>Min ₹{startup.min_investment}</span>
