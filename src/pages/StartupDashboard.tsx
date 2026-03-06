@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -13,11 +12,14 @@ import { StartupEditForm } from '@/components/startup-dashboard/StartupEditForm'
 import { StartupVerificationStatus } from '@/components/startup-dashboard/StartupVerificationStatus';
 import { StartupGrowthChart } from '@/components/startup-dashboard/StartupGrowthChart';
 import { StartupInvestorsList } from '@/components/startup-dashboard/StartupInvestorsList';
-import { ProfileSettings } from '@/components/profile/ProfileSettings';
 import { StartupAIMatchmaking } from '@/components/startup-dashboard/StartupAIMatchmaking';
+import { StartupProfileViews } from '@/components/startup-dashboard/StartupProfileViews';
+import { StartupAIInsights } from '@/components/startup-dashboard/StartupAIInsights';
+import { StartupMilestones } from '@/components/startup-dashboard/StartupMilestones';
+import { ProfileSettings } from '@/components/profile/ProfileSettings';
 import {
-  Building2, TrendingUp, Users, Shield, Edit, BarChart2,
-  DollarSign, PieChart, UserCircle, Percent, Brain
+  TrendingUp, Users, Shield, Edit, BarChart2,
+  DollarSign, UserCircle, Percent, Brain, Eye, Sparkles, Trophy
 } from 'lucide-react';
 
 export default function StartupDashboard() {
@@ -172,39 +174,65 @@ export default function StartupDashboard() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-6 w-full max-w-4xl bg-muted/50 p-1 rounded-xl">
-            <TabsTrigger value="overview" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <BarChart2 className="h-4 w-4 mr-2" />
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="matchmaking" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <Brain className="h-4 w-4 mr-2" />
-              AI Matchmaking
-            </TabsTrigger>
-            <TabsTrigger value="investors" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <Users className="h-4 w-4 mr-2" />
-              Investors
-            </TabsTrigger>
-            <TabsTrigger value="edit" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Details
-            </TabsTrigger>
-            <TabsTrigger value="verification" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <Shield className="h-4 w-4 mr-2" />
-              Verification
-            </TabsTrigger>
-            <TabsTrigger value="profile" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <UserCircle className="h-4 w-4 mr-2" />
-              Profile
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-4 px-4">
+            <TabsList className="inline-flex w-auto min-w-full lg:grid lg:grid-cols-9 bg-muted/50 p-1 rounded-xl">
+              <TabsTrigger value="overview" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
+                <BarChart2 className="h-4 w-4 mr-1.5" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="views" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
+                <Eye className="h-4 w-4 mr-1.5" />
+                Profile Views
+              </TabsTrigger>
+              <TabsTrigger value="ai-insights" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
+                <Sparkles className="h-4 w-4 mr-1.5" />
+                AI Insights
+              </TabsTrigger>
+              <TabsTrigger value="matchmaking" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
+                <Brain className="h-4 w-4 mr-1.5" />
+                AI Matchmaking
+              </TabsTrigger>
+              <TabsTrigger value="milestones" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
+                <Trophy className="h-4 w-4 mr-1.5" />
+                Milestones
+              </TabsTrigger>
+              <TabsTrigger value="investors" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
+                <Users className="h-4 w-4 mr-1.5" />
+                Investors
+              </TabsTrigger>
+              <TabsTrigger value="edit" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
+                <Edit className="h-4 w-4 mr-1.5" />
+                Edit
+              </TabsTrigger>
+              <TabsTrigger value="verification" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
+                <Shield className="h-4 w-4 mr-1.5" />
+                Verification
+              </TabsTrigger>
+              <TabsTrigger value="profile" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
+                <UserCircle className="h-4 w-4 mr-1.5" />
+                Profile
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="overview">
             <StartupGrowthChart startup={startup} investments={investments} />
           </TabsContent>
 
+          <TabsContent value="views">
+            <StartupProfileViews startup={startup} />
+          </TabsContent>
+
+          <TabsContent value="ai-insights">
+            <StartupAIInsights startup={startup} investments={investments} />
+          </TabsContent>
+
           <TabsContent value="matchmaking">
             <StartupAIMatchmaking startup={startup} founderId={user!.id} />
+          </TabsContent>
+
+          <TabsContent value="milestones">
+            <StartupMilestones startup={startup} investments={investments} />
           </TabsContent>
 
           <TabsContent value="investors">
